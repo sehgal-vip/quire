@@ -26,6 +26,9 @@ function applyTheme(resolved: ResolvedTheme) {
 
 function loadMode(): ThemeMode {
   if (typeof localStorage === 'undefined') return 'system';
+  // When embedded on vipulsehgal.com, follow site header toggle (theme-preference)
+  const site = localStorage.getItem('theme-preference');
+  if (site === 'light' || site === 'dark') return site;
   const stored = localStorage.getItem('quire-theme');
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   return 'system';
@@ -46,6 +49,11 @@ export const useThemeStore = create<ThemeStore>((set) => {
         applyTheme(newResolved);
         set({ resolved: newResolved });
       }
+    });
+    // When embedded on site: sync to header theme toggle (site-theme-change from theme-toggle.js)
+    window.addEventListener('site-theme-change', () => {
+      const t = localStorage.getItem('theme-preference');
+      if (t === 'light' || t === 'dark') useThemeStore.getState().setMode(t);
     });
   }
 
