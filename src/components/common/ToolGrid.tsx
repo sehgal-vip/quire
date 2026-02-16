@@ -71,10 +71,10 @@ export function ToolGrid() {
     <div>
       {/* Mode Toggle */}
       <div className="flex justify-center mb-6">
-        <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50">
+        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-800">
           <button
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              !pipelineMode ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              !pipelineMode ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
             onClick={() => { if (pipelineMode) { togglePipelineMode(); usePipelineStore.getState().clearPipeline(); } }}
           >
@@ -82,7 +82,7 @@ export function ToolGrid() {
           </button>
           <button
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              pipelineMode ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              pipelineMode ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
             onClick={() => { if (!pipelineMode) togglePipelineMode(); }}
           >
@@ -93,26 +93,26 @@ export function ToolGrid() {
 
       {/* Pipeline selection summary */}
       {pipelineMode && pipelineSelectedTools.length > 0 && (
-        <div className="mb-4 p-3 bg-indigo-50 rounded-lg flex items-center justify-between">
-          <span className="text-sm text-indigo-700">
+        <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950 rounded-lg flex items-center justify-between">
+          <span className="text-sm text-indigo-700 dark:text-indigo-300">
             {pipelineSelectedTools.length} tool{pipelineSelectedTools.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => usePipelineStore.getState().clearPipeline()}
-              className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Clear
             </button>
             <button
               onClick={() => setView('pipeline')}
-              className="px-4 py-1.5 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-100 transition-colors"
+              className="px-4 py-1.5 text-sm text-indigo-600 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-700 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
             >
               Configure
             </button>
             <button
               onClick={handleStartPipeline}
-              className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={pipelineSelectedTools.length < 2}
             >
               Start Pipeline
@@ -124,7 +124,7 @@ export function ToolGrid() {
       {/* Tool Categories */}
       {grouped.map((group) => (
         <div key={group.key} className="mb-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2">
             <span className={`w-2.5 h-2.5 rounded-full ${categoryDotMap[group.color]}`} />
             {group.label}
           </h2>
@@ -142,7 +142,7 @@ export function ToolGrid() {
                   onClick={() => handleToolClick(tool)}
                   disabled={isDisabled || isMaxed}
                   className={`
-                    relative text-left p-5 bg-white rounded-xl shadow-sm border-l-4
+                    relative text-left p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border-l-4
                     ${categoryColorMap[tool.categoryColor]}
                     transition-all duration-150
                     ${isDisabled || isMaxed ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5 hover:shadow-md cursor-pointer'}
@@ -160,8 +160,8 @@ export function ToolGrid() {
                   <div className="flex items-start gap-3">
                     {Icon && <Icon size={24} className={`${categoryIconColorMap[tool.categoryColor]} shrink-0 mt-0.5`} />}
                     <div>
-                      <h3 className="font-medium text-gray-900">{tool.name}</h3>
-                      <p className="text-sm text-gray-500 mt-0.5">{tool.description}</p>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">{tool.name}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{tool.description}</p>
                     </div>
                   </div>
                 </button>

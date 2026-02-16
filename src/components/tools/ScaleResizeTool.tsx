@@ -106,28 +106,38 @@ export function ScaleResizeTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="scale" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={handleProcess}
+          disabled={!canProcess || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Maximize2 size={14} />
+          {status === 'processing' ? 'Processing...' : 'Resize PDF'}
+        </button>
+      </div>
 
       {/* Target size selection */}
       <div className="space-y-2">
-        <label htmlFor="target-size" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="target-size" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Target page size
         </label>
         <select
           id="target-size"
           value={targetSize}
           onChange={(e) => setTargetSize(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
         >
           {Object.entries(PAGE_SIZE_PRESETS).map(([key, preset]) => (
             <option key={key} value={key}>
@@ -141,7 +151,7 @@ export function ScaleResizeTool() {
       {targetSize === 'Custom' && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label htmlFor="custom-width" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="custom-width" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Width (points)
             </label>
             <input
@@ -150,11 +160,11 @@ export function ScaleResizeTool() {
               min={1}
               value={customWidth}
               onChange={(e) => setCustomWidth(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="custom-height" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="custom-height" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Height (points)
             </label>
             <input
@@ -163,10 +173,10 @@ export function ScaleResizeTool() {
               min={1}
               value={customHeight}
               onChange={(e) => setCustomHeight(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
           </div>
-          <p className="col-span-2 text-xs text-gray-400">
+          <p className="col-span-2 text-xs text-gray-400 dark:text-gray-500">
             1 inch = 72 points, 1 mm = 2.835 points
           </p>
         </div>
@@ -182,10 +192,10 @@ export function ScaleResizeTool() {
           className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
         />
         <div>
-          <label htmlFor="fit-content" className="text-sm font-medium text-gray-700">
+          <label htmlFor="fit-content" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Fit content to new page size
           </label>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             Scale existing content proportionally to fit within the new page dimensions.
             When unchecked, content retains its original size and may be cropped or have extra whitespace.
           </p>
@@ -194,9 +204,9 @@ export function ScaleResizeTool() {
 
       {/* Apply to selection */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Apply to</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apply to</label>
         <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="radio"
               name="apply-to"
@@ -207,7 +217,7 @@ export function ScaleResizeTool() {
             />
             All pages
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="radio"
               name="apply-to"
@@ -238,11 +248,11 @@ export function ScaleResizeTool() {
       <button
         onClick={handleProcess}
         disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <Maximize2 size={16} />
         {status === 'processing' ? 'Processing...' : 'Resize PDF'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

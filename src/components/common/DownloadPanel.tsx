@@ -15,7 +15,7 @@ export function DownloadPanel({ result, onReset }: DownloadPanelProps) {
       {isSingle ? (
         <button
           onClick={() => downloadFile(result.files[0])}
-          className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors focus-ring"
+          className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors focus-ring"
         >
           <Download size={16} /> Download
         </button>
@@ -23,7 +23,7 @@ export function DownloadPanel({ result, onReset }: DownloadPanelProps) {
         <>
           <button
             onClick={() => downloadAsZip(result.files, 'quire-output.zip')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors focus-ring"
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors focus-ring"
           >
             <Download size={16} /> Download All as ZIP
           </button>
@@ -31,7 +31,7 @@ export function DownloadPanel({ result, onReset }: DownloadPanelProps) {
             <button
               key={i}
               onClick={() => downloadFile(f)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               {f.name}
             </button>
@@ -40,7 +40,7 @@ export function DownloadPanel({ result, onReset }: DownloadPanelProps) {
       )}
       <button
         onClick={onReset}
-        className="flex items-center gap-2 px-4 py-2.5 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus-ring"
+        className="flex items-center gap-2 px-4 py-2.5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus-ring"
       >
         <RefreshCw size={16} /> Process another file
       </button>

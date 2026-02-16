@@ -67,13 +67,13 @@ function getPresetIcon(iconName: string): LucideIcon {
 function getWarningStyle(type: ValidationResult['warnings'][number]['type']): string {
   switch (type) {
     case 'error':
-      return 'text-red-600 bg-red-50 border-red-200';
+      return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800';
     case 'warning':
-      return 'text-amber-600 bg-amber-50 border-amber-200';
+      return 'text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800';
     case 'suggestion':
-      return 'text-blue-600 bg-blue-50 border-blue-200';
+      return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800';
     default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
   }
 }
 
@@ -130,7 +130,7 @@ export default function PipelineBuilder() {
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Pipeline Presets Row */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">
+        <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Quick Start Presets
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -140,15 +140,15 @@ export default function PipelineBuilder() {
               <button
                 key={preset.id}
                 onClick={() => handleLoadPreset(preset)}
-                className="group flex flex-col items-start gap-2 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition-all hover:border-indigo-300 hover:shadow-md"
+                className="group flex flex-col items-start gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-left shadow-sm transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md"
               >
                 <div className="flex items-center gap-2">
-                  <PresetIcon className="h-4 w-4 text-indigo-600" />
-                  <span className="text-sm font-medium text-gray-900">
+                  <PresetIcon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {preset.name}
                   </span>
                 </div>
-                <p className="text-xs leading-relaxed text-gray-500">
+                <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                   {preset.description}
                 </p>
                 <div className="flex flex-wrap gap-1">
@@ -157,7 +157,7 @@ export default function PipelineBuilder() {
                     return (
                       <span
                         key={toolId}
-                        className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 group-hover:bg-indigo-50 group-hover:text-indigo-700"
+                        className="inline-block rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950 group-hover:text-indigo-700 dark:group-hover:text-indigo-300"
                       >
                         {tool?.name ?? toolId}
                       </span>
@@ -172,24 +172,24 @@ export default function PipelineBuilder() {
 
       {/* Pipeline List */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">
+        <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Pipeline Steps
           {selectedTools.length > 0 && (
-            <span className="ml-2 text-xs font-normal text-gray-400">
+            <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
               ({selectedTools.length} tool{selectedTools.length !== 1 ? 's' : ''})
             </span>
           )}
         </h3>
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           {selectedTools.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Layers className="mb-3 h-8 w-8 text-gray-300" />
-              <p className="text-sm text-gray-400">
+              <Layers className="mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Select tools from the grid below to build your pipeline
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-gray-700">
               {selectedTools.map((toolId, index) => {
                 const tool = TOOL_MAP[toolId];
                 const ToolIcon = tool ? getToolIcon(tool.icon) : FileText;
@@ -201,14 +201,14 @@ export default function PipelineBuilder() {
                   <li key={`${toolId}-${index}`}>
                     <div className="flex items-center gap-3 px-4 py-3">
                       {/* Step number */}
-                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                         {index + 1}
                       </span>
 
                       {/* Tool icon + name */}
                       <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <ToolIcon className="h-4 w-4 flex-shrink-0 text-gray-500" />
-                        <span className="truncate text-sm font-medium text-gray-900">
+                        <ToolIcon className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                        <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                           {tool?.name ?? toolId}
                         </span>
                         {tool?.category && (
@@ -229,7 +229,7 @@ export default function PipelineBuilder() {
                         <button
                           onClick={() => handleMoveUp(index)}
                           disabled={index === 0}
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                          className="rounded p-1 text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 disabled:cursor-not-allowed disabled:opacity-30"
                           aria-label="Move up"
                         >
                           <ChevronUp className="h-4 w-4" />
@@ -237,14 +237,14 @@ export default function PipelineBuilder() {
                         <button
                           onClick={() => handleMoveDown(index)}
                           disabled={index === selectedTools.length - 1}
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                          className="rounded p-1 text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 disabled:cursor-not-allowed disabled:opacity-30"
                           aria-label="Move down"
                         >
                           <ChevronDown className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleRemoveTool(index)}
-                          className="ml-1 rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                          className="ml-1 rounded p-1 text-gray-400 dark:text-gray-500 transition-colors hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 dark:hover:text-red-400"
                           aria-label="Remove"
                         >
                           <X className="h-4 w-4" />
@@ -305,14 +305,14 @@ export default function PipelineBuilder() {
         <button
           onClick={handleClear}
           disabled={selectedTools.length === 0 || isExecuting}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Clear
         </button>
         <button
           onClick={handleStart}
           disabled={!canStart}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-400 disabled:opacity-70"
+          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 dark:bg-indigo-500 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-indigo-400 disabled:opacity-70"
         >
           <Play className="h-4 w-4" />
           Start Pipeline

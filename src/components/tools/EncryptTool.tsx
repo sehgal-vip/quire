@@ -34,7 +34,7 @@ function getPasswordStrength(password: string): PasswordStrength {
 }
 
 const STRENGTH_CONFIG: Record<PasswordStrength, { color: string; label: string; width: string }> = {
-  empty: { color: 'bg-gray-200', label: '', width: 'w-0' },
+  empty: { color: 'bg-gray-200 dark:bg-gray-700', label: '', width: 'w-0' },
   weak: { color: 'bg-red-500', label: 'Weak', width: 'w-1/3' },
   medium: { color: 'bg-yellow-500', label: 'Medium', width: 'w-2/3' },
   strong: { color: 'bg-green-500', label: 'Strong', width: 'w-full' },
@@ -126,21 +126,31 @@ export function EncryptTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="encrypt" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={handleProcess}
+          disabled={!canProcess || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Lock size={14} />
+          {status === 'processing' ? 'Processing...' : 'Encrypt PDF'}
+        </button>
+      </div>
 
       {/* Password input */}
       <div className="space-y-2">
-        <label htmlFor="encrypt-password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="encrypt-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Password
         </label>
         <div className="relative">
@@ -150,12 +160,12 @@ export function EncryptTool() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
-            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+            className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -165,15 +175,15 @@ export function EncryptTool() {
         {/* Password strength indicator */}
         {password.length > 0 && (
           <div className="space-y-1">
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className={`h-full ${strengthConfig.color} ${strengthConfig.width} rounded-full transition-all duration-300`}
               />
             </div>
             <p className={`text-xs ${
-              strength === 'weak' ? 'text-red-500' :
-              strength === 'medium' ? 'text-yellow-600' :
-              'text-green-600'
+              strength === 'weak' ? 'text-red-500 dark:text-red-400' :
+              strength === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+              'text-green-600 dark:text-green-400'
             }`}>
               {strengthConfig.label}
             </p>
@@ -183,7 +193,7 @@ export function EncryptTool() {
 
       {/* Confirm password input */}
       <div className="space-y-2">
-        <label htmlFor="encrypt-confirm-password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="encrypt-confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Confirm password
         </label>
         <div className="relative">
@@ -194,29 +204,29 @@ export function EncryptTool() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             onBlur={() => setConfirmTouched(true)}
             placeholder="Confirm password"
-            className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none ${
-              showMismatch ? 'border-red-300' : 'border-gray-300'
+            className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none dark:bg-gray-800 dark:text-gray-100 ${
+              showMismatch ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600'
             }`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
         {showMismatch && (
-          <p className="text-xs text-red-500">Passwords do not match.</p>
+          <p className="text-xs text-red-500 dark:text-red-400">Passwords do not match.</p>
         )}
       </div>
 
       {/* Permissions */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700">Permissions</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Permissions</label>
         <div className="space-y-2">
-          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={permissions.printing}
@@ -225,7 +235,7 @@ export function EncryptTool() {
             />
             Allow printing
           </label>
-          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={permissions.copying}
@@ -234,7 +244,7 @@ export function EncryptTool() {
             />
             Allow copying text
           </label>
-          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               checked={permissions.modifying}
@@ -247,7 +257,7 @@ export function EncryptTool() {
       </div>
 
       {/* Encryption info */}
-      <p className="text-xs text-gray-400">AES-128 encryption</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">AES-128 encryption</p>
 
       <ProgressBar />
 
@@ -255,11 +265,11 @@ export function EncryptTool() {
       <button
         onClick={handleProcess}
         disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <Lock size={16} />
         {status === 'processing' ? 'Processing...' : 'Encrypt PDF'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

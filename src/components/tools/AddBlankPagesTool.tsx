@@ -118,21 +118,31 @@ export function AddBlankPagesTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="add-blank-pages" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={handleProcess}
+          disabled={!canProcess || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FilePlus size={14} />
+          {status === 'processing' ? 'Processing...' : `Add ${count} Blank Page${count !== 1 ? 's' : ''}`}
+        </button>
+      </div>
 
       {/* Position selector */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Insert position</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Insert position</label>
         <div className="flex flex-wrap gap-2">
           {([
             { value: 'beginning', label: 'At beginning' },
@@ -149,14 +159,14 @@ export function AddBlankPagesTool() {
                 onChange={() => setPosition(opt.value)}
                 className="text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="text-sm text-gray-700">{opt.label}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{opt.label}</span>
             </label>
           ))}
         </div>
 
         {(position === 'before' || position === 'after') && (
           <div className="mt-2">
-            <label htmlFor="target-page" className="block text-xs text-gray-500 mb-1">
+            <label htmlFor="target-page" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
               Page number (1-{file.pageCount})
             </label>
             <input
@@ -166,7 +176,7 @@ export function AddBlankPagesTool() {
               max={file.pageCount}
               value={targetPage}
               onChange={(e) => setTargetPage(Math.max(1, Math.min(file.pageCount, parseInt(e.target.value, 10) || 1)))}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
           </div>
         )}
@@ -174,7 +184,7 @@ export function AddBlankPagesTool() {
 
       {/* Number of blank pages */}
       <div className="space-y-2">
-        <label htmlFor="blank-count" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="blank-count" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Number of blank pages
         </label>
         <input
@@ -184,21 +194,21 @@ export function AddBlankPagesTool() {
           max={100}
           value={count}
           onChange={(e) => setCount(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
-          className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+          className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
         />
-        <p className="text-xs text-gray-400">Between 1 and 100 blank pages.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">Between 1 and 100 blank pages.</p>
       </div>
 
       {/* Page size */}
       <div className="space-y-2">
-        <label htmlFor="page-size" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="page-size" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Page size
         </label>
         <select
           id="page-size"
           value={pageSize}
           onChange={(e) => setPageSize(e.target.value)}
-          className="w-64 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+          className="w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
         >
           {PAGE_SIZE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -210,7 +220,7 @@ export function AddBlankPagesTool() {
         {pageSize === 'custom' && (
           <div className="flex items-center gap-3 mt-2">
             <div>
-              <label htmlFor="custom-width" className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="custom-width" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                 Width (pt)
               </label>
               <input
@@ -219,12 +229,12 @@ export function AddBlankPagesTool() {
                 min={1}
                 value={customWidth}
                 onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 0)}
-                className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-28 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
-            <span className="text-gray-400 mt-5">x</span>
+            <span className="text-gray-400 dark:text-gray-500 mt-5">x</span>
             <div>
-              <label htmlFor="custom-height" className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="custom-height" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                 Height (pt)
               </label>
               <input
@@ -233,7 +243,7 @@ export function AddBlankPagesTool() {
                 min={1}
                 value={customHeight}
                 onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 0)}
-                className="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-28 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
           </div>
@@ -241,7 +251,7 @@ export function AddBlankPagesTool() {
       </div>
 
       {/* Summary */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600">
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400">
         Adding <span className="font-semibold">{count}</span> blank page{count !== 1 ? 's' : ''}{' '}
         {position === 'beginning' && 'at the beginning'}
         {position === 'end' && 'at the end'}
@@ -257,11 +267,11 @@ export function AddBlankPagesTool() {
       <button
         onClick={handleProcess}
         disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <FilePlus size={16} />
         {status === 'processing' ? 'Processing...' : `Add ${count} Blank Page${count !== 1 ? 's' : ''}`}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

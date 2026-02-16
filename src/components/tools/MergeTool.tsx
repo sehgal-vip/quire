@@ -92,35 +92,48 @@ export function MergeTool() {
     );
   }
 
-  // No files loaded
-  if (files.length === 0) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} multiple />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} multiple />
 
+      {files.length > 0 && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="merge" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {files.length} file{files.length !== 1 ? 's' : ''} — {totalPageCount} total page{totalPageCount !== 1 ? 's' : ''}
+        </p>
+        <button
+          onClick={handleProcess}
+          disabled={!canProcess || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Combine size={14} />
+          {status === 'processing' ? 'Processing...' : 'Merge PDFs'}
+        </button>
+      </div>
 
       {/* File list with reordering */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-700">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
           File order ({files.length} file{files.length !== 1 ? 's' : ''})
         </h3>
         <div className="space-y-1">
           {files.map((file, index) => (
             <div
               key={file.id}
-              className="flex items-center gap-2 border border-gray-200 rounded-lg p-3 bg-white"
+              className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800"
             >
-              <span className="text-xs font-mono text-gray-400 w-6 text-center shrink-0">
+              <span className="text-xs font-mono text-gray-400 dark:text-gray-500 w-6 text-center shrink-0">
                 {index + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{file.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {file.pageCount} page{file.pageCount !== 1 ? 's' : ''} · {formatFileSize(file.fileSize)}
                 </p>
               </div>
@@ -128,31 +141,31 @@ export function MergeTool() {
                 <button
                   onClick={() => moveFile(index, 'up')}
                   disabled={index === 0}
-                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={`Move ${file.name} up`}
                 >
-                  <ChevronUp size={16} className="text-gray-500" />
+                  <ChevronUp size={16} className="text-gray-500 dark:text-gray-400" />
                 </button>
                 <button
                   onClick={() => moveFile(index, 'down')}
                   disabled={index === files.length - 1}
-                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={`Move ${file.name} down`}
                 >
-                  <ChevronDown size={16} className="text-gray-500" />
+                  <ChevronDown size={16} className="text-gray-500 dark:text-gray-400" />
                 </button>
                 <button
                   onClick={() => removeFile(index)}
-                  className="p-1 rounded hover:bg-red-50 transition-colors"
+                  className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                   aria-label={`Remove ${file.name}`}
                 >
-                  <Trash2 size={16} className="text-gray-400 hover:text-red-500" />
+                  <Trash2 size={16} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400" />
                 </button>
               </div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           Total: {totalPageCount} page{totalPageCount !== 1 ? 's' : ''}
         </p>
       </div>
@@ -163,11 +176,11 @@ export function MergeTool() {
       <button
         onClick={handleProcess}
         disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <Combine size={16} />
         {status === 'processing' ? 'Processing...' : 'Merge PDFs'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

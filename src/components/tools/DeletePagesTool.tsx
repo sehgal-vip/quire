@@ -71,6 +71,35 @@ export function DeletePagesTool() {
 
       {file && (
         <>
+          {/* Top toolbar */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {file.pageCount} page{file.pageCount !== 1 ? 's' : ''}
+              {selectedPages.size > 0 && ` — ${selectedPages.size} selected for deletion`}
+            </p>
+            <div className="flex items-center gap-2">
+              {selectedPages.size > 0 && (
+                <button
+                  onClick={() => setSelectedPages(new Set())}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Reset Selection
+                </button>
+              )}
+              <button
+                onClick={handleProcess}
+                disabled={noneSelected || allSelected || status === 'processing'}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === 'processing'
+                  ? 'Processing...'
+                  : noneSelected
+                    ? 'Select pages'
+                    : `Delete ${selectedPages.size} Page${selectedPages.size !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+
           <PageSelector
             pageCount={file.pageCount}
             pdfBytes={file.bytes}
@@ -80,9 +109,9 @@ export function DeletePagesTool() {
           />
 
           {selectedPages.size > 0 && (
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
               Delete{' '}
-              <span className="font-semibold text-red-600">{selectedPages.size}</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{selectedPages.size}</span>
               {' '}of{' '}
               <span className="font-semibold">{file.pageCount}</span>
               {' '}page{selectedPages.size !== 1 ? 's' : ''}?
@@ -90,7 +119,7 @@ export function DeletePagesTool() {
           )}
 
           {allSelected && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
               {ERRORS.CANNOT_DELETE_ALL}
             </p>
           )}

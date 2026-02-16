@@ -106,28 +106,52 @@ export function SplitTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="split" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {file.pageCount} page{file.pageCount !== 1 ? 's' : ''}
+          {splitMode === 'single' && selectedPages.size > 0 && ` — ${selectedPages.size} selected`}
+        </p>
+        <div className="flex items-center gap-2">
+          {splitMode === 'single' && selectedPages.size > 0 && (
+            <button
+              onClick={() => setSelectedPages(new Set())}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Reset Selection
+            </button>
+          )}
+          <button
+            onClick={handleProcess}
+            disabled={!canProcess || status === 'processing'}
+            className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Scissors size={14} />
+            {status === 'processing' ? 'Processing...' : 'Split PDF'}
+          </button>
+        </div>
+      </div>
 
       {/* Split mode toggle */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Split mode</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Split mode</label>
         <div className="flex gap-2">
           <button
             onClick={() => setSplitMode('single')}
             className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
               splitMode === 'single'
-                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
-                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
             }`}
           >
             Extract pages
@@ -136,8 +160,8 @@ export function SplitTool() {
             onClick={() => setSplitMode('separate')}
             className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
               splitMode === 'separate'
-                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
-                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium dark:bg-indigo-950 dark:border-indigo-700 dark:text-indigo-300'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
             }`}
           >
             Split into ranges
@@ -158,7 +182,7 @@ export function SplitTool() {
 
       {splitMode === 'separate' && (
         <div className="space-y-2">
-          <label htmlFor="split-ranges" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="split-ranges" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Page ranges (comma-separated)
           </label>
           <input
@@ -168,13 +192,13 @@ export function SplitTool() {
             onChange={(e) => setRangeText(e.target.value)}
             placeholder="e.g., 1-3, 4-7, 8-end"
             className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none ${
-              separateRanges?.error ? 'border-red-300' : 'border-gray-300'
+              separateRanges?.error ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
             }`}
           />
           {separateRanges?.error && (
-            <p className="text-xs text-red-500">{separateRanges.error}</p>
+            <p className="text-xs text-red-500 dark:text-red-400">{separateRanges.error}</p>
           )}
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             Each comma-separated range will become a separate PDF file. Use "end" for the last page.
           </p>
         </div>
@@ -186,11 +210,11 @@ export function SplitTool() {
       <button
         onClick={handleProcess}
         disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <Scissors size={16} />
         {status === 'processing' ? 'Processing...' : 'Split PDF'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

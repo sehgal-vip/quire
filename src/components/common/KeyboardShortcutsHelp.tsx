@@ -22,21 +22,21 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div ref={ref} className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()} tabIndex={-1}>
+      <div ref={ref} className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()} tabIndex={-1}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded" aria-label="Close"><X size={18} /></button>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Keyboard Shortcuts</h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" aria-label="Close"><X size={18} /></button>
         </div>
         <table className="w-full text-sm">
           <tbody>
             {SHORTCUTS.map((s) => (
-              <tr key={s.action} className="border-t border-gray-100">
+              <tr key={s.action} className="border-t border-gray-100 dark:border-gray-700">
                 <td className="py-2 pr-4">
-                  <kbd className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">
+                  <kbd className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono">
                     {s.ctrl && (navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl+')}{s.shift ? 'Shift+' : ''}{s.key}
                   </kbd>
                 </td>
-                <td className="py-2 text-gray-600">{s.description}</td>
+                <td className="py-2 text-gray-600 dark:text-gray-400">{s.description}</td>
               </tr>
             ))}
           </tbody>

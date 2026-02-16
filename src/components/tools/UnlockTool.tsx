@@ -101,96 +101,103 @@ export function UnlockTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
-  // File is not encrypted
-  if (isEncrypted === false) {
-    return (
-      <div className="space-y-6">
-        <FileDropZone onFilesLoaded={handleFilesLoaded} />
-
-        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <Info size={20} className="text-blue-500 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-blue-800">
-              This PDF is not password-protected. No action needed.
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              Upload a different file or go back to the tool grid.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleBackToGrid}
-          className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
-        >
-          <ArrowLeft size={16} />
-          Back to tools
-        </button>
-      </div>
-    );
-  }
-
-  // Encrypted file: show password input
+  // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
-      <ToolSuggestions analysis={analysis} currentToolId="unlock" />
+      {file && isEncrypted === false && (
+        <>
+          <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <Info size={20} className="text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                This PDF is not password-protected. No action needed.
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Upload a different file or go back to the tool grid.
+              </p>
+            </div>
+          </div>
 
-      {/* Password input */}
-      <div className="space-y-2">
-        <label htmlFor="unlock-password" className="block text-sm font-medium text-gray-700">
-          PDF Password
-        </label>
-        <div className="relative">
-          <input
-            id="unlock-password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setUnlockError(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && canProcess) {
-                handleProcess();
-              }
-            }}
-            placeholder="Enter the PDF password"
-            className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none ${
-              unlockError ? 'border-red-300' : 'border-gray-300'
-            }`}
-          />
           <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            onClick={handleBackToGrid}
+            className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
           >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            <ArrowLeft size={16} />
+            Back to tools
           </button>
-        </div>
-        {unlockError && (
-          <p className="text-xs text-red-500">{unlockError}</p>
-        )}
-      </div>
+        </>
+      )}
 
-      <ProgressBar />
+      {file && isEncrypted && (
+        <>
+          <ToolSuggestions analysis={analysis} currentToolId="unlock" />
 
-      {/* Process button */}
-      <button
-        onClick={handleProcess}
-        disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
-      >
-        <Unlock size={16} />
-        {status === 'processing' ? 'Processing...' : 'Unlock PDF'}
-      </button>
+          {/* Top toolbar */}
+          <div className="flex items-center justify-end">
+            <button
+              onClick={handleProcess}
+              disabled={!canProcess || status === 'processing'}
+              className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Unlock size={14} />
+              {status === 'processing' ? 'Processing...' : 'Unlock PDF'}
+            </button>
+          </div>
+
+          {/* Password input */}
+          <div className="space-y-2">
+            <label htmlFor="unlock-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              PDF Password
+            </label>
+            <div className="relative">
+              <input
+                id="unlock-password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setUnlockError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && canProcess) {
+                    handleProcess();
+                  }
+                }}
+                placeholder="Enter the PDF password"
+                className={`w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none dark:bg-gray-800 dark:text-gray-100 ${
+                  unlockError ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {unlockError && (
+              <p className="text-xs text-red-500 dark:text-red-400">{unlockError}</p>
+            )}
+          </div>
+
+          <ProgressBar />
+
+          {/* Process button */}
+          <button
+            onClick={handleProcess}
+            disabled={!canProcess || status === 'processing'}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+          >
+            <Unlock size={16} />
+            {status === 'processing' ? 'Processing...' : 'Unlock PDF'}
+          </button>
+        </>
+      )}
     </div>
   );
 }

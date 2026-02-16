@@ -410,3 +410,162 @@
 | P-05 | Rapid thumbnail scroll | 100-page grid, fast scrolling | Render queue handles without browser hang |
 | P-06 | Sequential operations | Upload > process > download > "Process another" > repeat | No memory leaks after 5 cycles |
 | P-07 | Worker crash recovery | Send extremely corrupt data | Error shown, worker remains functional for next operation |
+
+---
+
+## 6. Visual Test Cases
+
+### 6.1 Header Category Navigation
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-HDR-01 | Open app on desktop viewport (>= 768px) | All 5 category buttons (Organize, Transform, Stamp, Security, Info) visible in header, right-aligned before shortcuts button | Each category button has colored dot matching its theme color (blue, amber, purple, red, green) |
+| TC-HDR-02 | Open app on mobile viewport (< 768px) | Category nav is hidden (`hidden md:flex`). Only Quire logo and shortcuts button visible | Resize below 768px — categories disappear; resize above — they reappear |
+| TC-HDR-03 | Hover over any category button (e.g., "Organize") | Dropdown appears below the button containing all tools in that category | Dropdown has white background, rounded corners, shadow, and border. Stays visible while mouse is over trigger or dropdown |
+| TC-HDR-04 | Move mouse away from both the category button and dropdown | Dropdown disappears immediately | No lingering dropdowns when hovering between different categories |
+| TC-HDR-05 | Hover over "Organize" category | Dropdown lists: Split PDF, Merge PDFs, Reorder Pages, Delete Pages, Extract Pages, Add Blank Pages | Each tool shows its icon (colored per category), name (bold), and description (gray, smaller text) |
+| TC-HDR-06 | Check all category dropdowns | See table below | Tools match expected grouping |
+| TC-HDR-07 | Click "Split PDF" in the Organize dropdown | App navigates to Split PDF tool view. URL hash changes to `#split` | Tool component loads correctly. Repeat for tools from each category |
+| TC-HDR-08 | Navigate to Split PDF tool, hover over "Organize" category | "Split PDF" item has indigo highlight (`bg-indigo-50 text-indigo-700`), icon is indigo | Other tools in same dropdown do NOT have indigo highlight |
+| TC-HDR-09 | Go to home/grid view, hover over any category | No tools are highlighted with indigo in any dropdown | All tool items show default gray hover styling |
+| TC-HDR-10 | Start a PDF operation, click a different tool in header dropdown | `window.confirm` dialog: "You have work in progress. Leave this page?" | Dialog has OK and Cancel buttons |
+| TC-HDR-11 | While processing, click another tool and press OK | Navigation proceeds to selected tool. Processing interrupted | URL hash updates, new tool loads |
+| TC-HDR-12 | While processing, click another tool and press Cancel | Navigation blocked. User stays on current tool. Processing continues | URL hash unchanged, current tool view persists |
+| TC-HDR-13 | With no active processing, click a tool in header dropdown | Navigation happens immediately with no confirm dialog | No dialog shown when status is idle, done, error, or cancelled |
+| TC-HDR-14 | Inspect each category button | Organize: blue dot (`bg-blue-500`), Transform: amber (`bg-amber-500`), Stamp: purple (`bg-purple-500`), Security: red (`bg-red-500`), Info: green (`bg-green-500`) | Colors match |
+| TC-HDR-15 | Open a dropdown near other UI elements | Dropdown renders above all other content (`z-50`) | No clipping or overlapping issues with page content |
+| TC-HDR-16 | Hover over the rightmost category ("Info") | Dropdown is right-aligned (`right-0`) so it doesn't overflow viewport | No horizontal scrollbar; dropdown stays within viewport bounds |
+| TC-HDR-17 | Click the keyboard shortcuts (?) button in header | Shortcuts modal/dialog opens | Button is at the far right of the header, after the category nav |
+| TC-HDR-18 | Verify header dimensions after adding navigation | Header remains `h-14` (56px tall), with consistent spacing | No layout shift or overflow from the added category buttons |
+| TC-HDR-19 | Hover over each category and inspect tool icons | Tool icons use category-themed colors (blue for Organize, amber for Transform, etc.) | Active tool's icon switches to indigo instead of category color |
+| TC-HDR-20 | Quickly move mouse across multiple category buttons | Only currently hovered category's dropdown is visible. No overlapping dropdowns | CSS `group-hover` mechanism handles transitions cleanly |
+| TC-HDR-21 | Inspect category buttons with screen reader / dev tools | Each category button has `aria-haspopup="true"` | Accessible navigation pattern |
+| TC-HDR-22 | Load a PDF into any tool, then click a different tool in header | `window.confirm` dialog: "You have a file loaded. Leave this tool?" | Dialog has OK and Cancel buttons |
+| TC-HDR-23 | With a file loaded, click another tool and press OK | Navigation proceeds to the selected tool | URL hash updates, new tool loads |
+| TC-HDR-24 | With a file loaded, click another tool and press Cancel | Navigation blocked. User stays on current tool with file intact | URL hash unchanged, current tool view persists |
+| TC-HDR-25 | Have file loaded AND be actively processing, then click another tool | "work in progress" message appears (not "file loaded") | Processing state takes priority in warning check |
+
+**TC-HDR-06 Expected Tool Groupings:**
+
+| Category | Expected Tools |
+|----------|---------------|
+| Organize | Split PDF, Merge PDFs, Reorder Pages, Delete Pages, Extract Pages, Add Blank Pages |
+| Transform | Rotate Pages, Scale / Resize |
+| Stamp | Page Numbers, Text Watermark |
+| Security | Encrypt PDF, Unlock PDF |
+| Info | Edit Metadata |
+
+### 6.2 Reorder Pages Tool
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-RO-01 | Upload a multi-page PDF to the Reorder tool | Actual PDF page thumbnail images render in the grid (not just page numbers) | Each card shows rendered page content, with loading pulse animation while loading |
+| TC-RO-02 | Upload a PDF where thumbnail rendering fails for a page | Failed thumbnails show amber warning icon with "Page N" text | Graceful degradation — tool is still functional |
+| TC-RO-03 | Drag page 1 and drop it after page 3 | Page order updates: pages shift to accommodate the moved page | Grid re-renders with new order. "was N" badges appear on moved pages |
+| TC-RO-04 | Start dragging a page card | Dragged card becomes semi-transparent (opacity 0.5) with lighter border | Cursor changes to `grabbing` during drag |
+| TC-RO-05 | Drag a page card over the gaps between other cards | Vertical indigo line (3px, `bg-indigo-500`) appears between cards showing insertion point | Line has small dots at top/bottom ends. Disappears when drag ends |
+| TC-RO-06 | Inspect each page card | A grip/drag handle icon (GripVertical) appears at top center of each card | Visual cue that cards are draggable |
+| TC-RO-07 | Click left/right arrow buttons on a page card | Page swaps with its neighbor in the indicated direction | First page's left arrow disabled; last page's right arrow disabled |
+| TC-RO-08 | Upload a PDF and view the reorder grid | Each card has a small rounded badge at bottom showing original page number | Badge has dark semi-transparent background with white text |
+| TC-RO-09 | Move page 3 to position 1 | Moved card shows indigo "was 3" badge at top-right, card has indigo border/background | Unmoved cards have gray border and no "was" badge |
+| TC-RO-10 | Reorder some pages, then click "Reset Order" | All pages return to original order (0, 1, 2, ...) | "Reset Order" button disabled when no changes made |
+| TC-RO-11 | Load a PDF without making any reorder changes | "Reorder Pages" button is disabled (opacity 50%) | Button enables only after page order has been modified |
+| TC-RO-12 | Hover over a page card | Cursor shows `grab`. While actively dragging, cursor shows `grabbing` | CSS `cursor-grab active:cursor-grabbing` applied |
+| TC-RO-13 | Resize the browser window with pages loaded | Grid columns adapt via `auto-fill, minmax(140px, 1fr)` | No overflow or layout breaking at any width |
+| TC-RO-14 | Try to drag a thumbnail image directly | Thumbnail image has `draggable={false}` and `pointer-events-none` | No browser-native image drag behavior interferes |
+| TC-RO-15 | Drag a page card and hover over the left half of another card | Insertion line appears on the left edge of the hovered card (`-left-[7px]`) | Line does NOT appear over the dragged card itself |
+| TC-RO-16 | Drag a page card and hover over the right half of the last card | Insertion line appears on the right edge of the last card (`-right-[7px]`) | Only occurs for the last card when insertion point is at the end |
+| TC-RO-17 | Drag a page to a new position and release | Insertion line disappears immediately. Page snaps into new position | No lingering visual artifacts. Both `dragIndex` and `insertAt` reset to null |
+| TC-RO-18 | Load a multi-page PDF and reorder some pages | "Reorder Pages" button appears at top of grid next to "Reset Order" | Top button has indigo-600 background, white text, same disabled state as bottom button |
+| TC-RO-19 | Load a PDF without making any reorder changes | Top "Reorder Pages" button is disabled (opacity 50%, cursor not-allowed) | Button enables only after page order has been modified |
+
+### 6.3 Page Numbers — Unified Position Picker
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-POS-01 | Open Page Numbers tool and load a PDF | Single page preview appears with 3x3 grid of clickable zones overlaid on top. Page number text drawn at selected position | Canvas has `data-testid="pagenumber-preview-canvas"`, wrapped in `rounded-xl shadow-inner` container |
+| TC-POS-02 | Inspect the page preview | 9 transparent clickable zones overlaid on canvas in 3x3 grid (`grid-cols-3 grid-rows-3`), positioned with `absolute inset-2` | Each zone is a `<button>` with `aria-label="Place number at [Position Name]"` |
+| TC-POS-03 | Click the bottom-right zone | Clicked zone shows: solid indigo border (2px, `border-indigo-500`), light indigo tint (`bg-indigo-500/10`), floating label pill ("Bottom Right") | Only one zone selected at a time. Clicking another zone moves the selection |
+| TC-POS-04 | Inspect the 8 non-selected zones | Unselected zones have thin dashed gray borders (`border-gray-300/60 border-dashed`), fully transparent background | On hover, zones show faint indigo tint (`hover:bg-indigo-500/5`) |
+| TC-POS-05 | Click through different zones | Page number text on canvas moves to corresponding position | Canvas redraws immediately. Text has white semi-transparent pill behind it |
+| TC-POS-06 | Open the tool fresh and load a PDF | Bottom-center zone is selected by default. Page number "1" appears at bottom-center | Bottom-center zone has selected indigo style with "Bottom Center" label |
+| TC-POS-07 | With format "Page 1 of N" and a 10-page PDF | Preview header reads: "Position & Preview — Click a zone to place the number · Page 1 of 10, Page 2 of 10, ..." | Label updates when format, start number, or file changes |
+| TC-POS-08 | Load a real PDF with visible content | Actual first page renders on canvas with 9 clickable zones overlaid transparently on top | Page content visible through zone buttons |
+| TC-POS-09 | Change font size, color, margin, format, or start number | Page number text on canvas updates immediately to reflect new settings | Changing font size makes number visibly larger/smaller |
+| TC-POS-10 | Load a 5-page PDF | Bottom-right corner shows "Page 1 of 5" floating badge with `pointer-events-none` | Badge has semi-transparent background, backdrop blur |
+| TC-POS-11 | Open Page Numbers tool on desktop viewport (>= 1024px) | Settings on LEFT column, unified position/preview canvas on RIGHT column, side by side | Uses `grid grid-cols-1 lg:grid-cols-2 gap-6 items-start` |
+| TC-POS-12 | View on narrow viewport (< 1024px) | Layout falls back to single column — settings stacked above preview | `grid-cols-1` on smaller screens |
+
+### 6.4 Page Numbers — Canvas Preview
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-PN-01 | Open Page Numbers tool and load a PDF | Canvas preview (400x566) renders showing first page with 3x3 position grid overlay and page number drawn at selected position | Canvas has `data-testid="pagenumber-preview-canvas"` |
+| TC-PN-02 | Load a PDF and inspect the preview canvas | Nine rectangular zones overlaid on page in 3x3 grid (TL, TC, TR, ML, MC, MR, BL, BC, BR) | 8 inactive zones have thin (1px) gray dashed outlines, 1 active zone has thicker (2.5px) solid indigo outline |
+| TC-PN-03 | Select "Top Right" (TR) position | Top-right zone has solid indigo border (2.5px, #6366f1), light indigo fill (8% opacity), page number text drawn inside | Switching positions immediately updates highlighted zone |
+| TC-PN-04 | With any position selected, inspect other 8 zones | Inactive zones have thin gray (#d1d5db) dashed borders (1px, dash pattern [4,3]) | Outlines clearly visible but subtle, with rounded corners (r=4) |
+| TC-PN-05 | Select "Bottom Left" with format "Page 1 of N" | Text "Page 1 of 10" appears in bottom-left area, left-aligned with bottom baseline | Text drawn at margin distance from edge, bold, using selected color |
+| TC-PN-06 | Inspect the page number text on canvas | Subtle indigo-tinted rounded pill (12% opacity) behind the page number text | Pill auto-sizes to text width with 4px padding |
+| TC-PN-07 | Click through all 9 positions in the grid selector | For each click: new zone highlighted, page number moved, previous zone reverts to dashed outline | No flicker or delay between position changes |
+| TC-PN-08 | Increase font size from 12pt to 36pt | Page number text on canvas becomes visibly larger | Font scales via `fontSize * (canvasWidth / 612)` |
+| TC-PN-09 | Change color from black to red (#ff0000) | Page number text on canvas turns red immediately | Color updates live |
+| TC-PN-10 | Increase margin from 40pt to 100pt | Page number text moves further inward from page edges | Margin scaled relative to canvas width |
+| TC-PN-11 | Switch format from "1" to "Page 1 of N" | Canvas text changes from "1" to "Page 1 of 10" | All 5 format options render correctly |
+| TC-PN-12 | Change starting number from 1 to 5 | Canvas shows "5" (or "Page 5 of N") instead of "1" | Preview reflects actual first page number |
+| TC-PN-13 | Load a 10-page PDF with format "Page 1 of N" and start 1 | Preview label reads: "Preview Page 1 · Page 1 of 10, Page 2 of 10, ..." | Label updates dynamically |
+| TC-PN-14 | Load a 5-page PDF | Bottom-right corner shows "Page 1 of 5" badge with semi-transparent background and backdrop blur | Badge always visible regardless of selected position |
+| TC-PN-15 | Load a PDF where thumbnail hasn't completed yet | Canvas shows white background with faint gray horizontal lines, with position grid and page number still overlaid | Tool usable even before thumbnail loads |
+| TC-PN-16 | Load file A, then load file B | Canvas updates to show file B's first page with position overlay | Previous thumbnail cleared, new one renders asynchronously |
+
+### 6.5 Watermark Preview
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-WM-01 | Open Text Watermark tool and load a PDF | Canvas-based preview shows first page with watermark text overlaid | Canvas has `data-testid="watermark-preview-canvas"`, dimensions 400x566 |
+| TC-WM-02 | Load a multi-page PDF | Preview canvas shows actual rendered first page (not just blank white box) | Thumbnail loaded via `renderPageThumbnail(file.bytes, 0, 1.0)` |
+| TC-WM-03 | Load a PDF where thumbnail rendering takes time or fails | Preview shows white background with faint horizontal gray lines simulating text content | Lines at even intervals with slight width variation |
+| TC-WM-04 | Set mode to "Center" and type "DRAFT" | Single "DRAFT" text appears centered on canvas, rotated at configured angle | Text is bold, uses configured color and opacity, font scales to canvas width |
+| TC-WM-05 | Switch mode to "Tile" | Watermark text repeats in tiled grid pattern across entire canvas | Tiled text is half the font size of center mode |
+| TC-WM-06 | Adjust opacity slider from 15% to 80% | Watermark text immediately becomes more opaque | Canvas redraws on every opacity change |
+| TC-WM-07 | Drag rotation slider from 45° to -30° | Watermark text rotates from diagonal top-right to diagonal top-left in real-time | Both center and tile modes update rotation |
+| TC-WM-08 | Increase font size from 60pt to 100pt | Watermark text on canvas becomes larger immediately | Font scales: `fontSize * (canvasWidth / 612)` |
+| TC-WM-09 | Change color from gray (#808080) to red (#ff0000) | Watermark text color changes immediately on canvas | Both canvas text and color picker/hex display update |
+| TC-WM-10 | Change watermark text from "CONFIDENTIAL" to "DO NOT COPY" | Canvas preview immediately shows "DO NOT COPY" | Empty text falls back to "Watermark" placeholder |
+| TC-WM-11 | Load a 10-page PDF | Small floating badge in bottom-right reads "Page 1 of 10" | Badge has semi-transparent black background, white text, rounded-full, backdrop blur |
+| TC-WM-12 | Inspect the preview section | Preview label says "Preview" with "Page 1" subtitle. Canvas inside `rounded-xl` container with `shadow-inner` and gray-50 background | Professional appearance with depth cues |
+| TC-WM-13 | Load file A, then load file B | Preview updates to show file B's first page with watermark overlay | Previous thumbnail cleared, new one loads asynchronously |
+| TC-WM-14 | Load a file, configure watermark, process, then reset | Preview, thumbnail, and all settings return to defaults | Canvas shows placeholder lines, text resets to "CONFIDENTIAL" |
+| TC-WM-15 | Toggle between Center and Tile modes with file loaded | Canvas preview immediately switches between single centered text and tiled pattern | Tile mode shows multiple smaller text instances |
+| TC-WM-16 | Open Text Watermark tool on desktop viewport (>= 1024px) | Settings on LEFT column, live preview canvas on RIGHT column, side by side | Uses `grid grid-cols-1 lg:grid-cols-2 gap-6 items-start` |
+| TC-WM-17 | View on narrow viewport (< 1024px) | Layout falls back to single column — settings stacked above preview | `grid-cols-1` on smaller screens |
+
+### 6.6 Top Execution Buttons (All Tools)
+
+| ID | Tool | Expected Toolbar | Verify |
+|----|------|-----------------|--------|
+| TC-TOP-01 | Split | Page count, "Reset Selection" button (when pages selected), "Split PDF" button with scissors icon | Top button matches bottom button's disabled/enabled state |
+| TC-TOP-02 | Merge | File count and total page count, "Merge PDFs" button | Disabled with < 2 files, enabled with 2+ |
+| TC-TOP-03 | Delete Pages | Page count + selection count, "Reset Selection" button, Delete button (red) | "Select pages" when none selected, "Delete N Pages" when some selected, disabled when all selected |
+| TC-TOP-04 | Extract Pages | Page count + selection count, "Reset Selection" button, Extract button | "Select pages" when none selected, "Extract N Pages" when some selected |
+| TC-TOP-05 | Reorder Pages | Page count and instructions, "Reset Order" and "Reorder Pages" buttons side by side | Both disabled when order unchanged |
+| TC-TOP-06 | Rotate Pages | Page count, rotation count, "Rotate Pages" button | Disabled when no rotations applied |
+| TC-TOP-07 | Add Blank Pages | "Add N Blank Pages" button (right-aligned) | Disabled when inputs invalid |
+| TC-TOP-08 | Scale / Resize | "Resize PDF" button (right-aligned) | Disabled until valid configuration |
+| TC-TOP-09 | Page Numbers | "Add Page Numbers" button at bottom of left settings column | Disabled until file loaded |
+| TC-TOP-10 | Text Watermark | "Add Watermark" button at bottom of left settings column | Disabled when text empty |
+| TC-TOP-11 | Encrypt PDF | "Encrypt PDF" button (right-aligned) | Disabled until passwords match and non-empty |
+| TC-TOP-12 | Unlock PDF | "Unlock PDF" button (right-aligned) | Disabled until password entered |
+| TC-TOP-13 | Edit Metadata | "Save Changes" button (right-aligned) | Enabled whenever file loaded |
+
+### 6.7 Result Page Document Viewer
+
+| ID | Scenario | Expected Result | Verify |
+|----|----------|-----------------|--------|
+| TC-DV-01 | Process a single-output tool and view the result | Result page shows ALL pages rendered vertically in scrollable container (max-height 600px). Each page is full-width image with rounded corners and shadow | Pages lazy-load with IntersectionObserver (300px rootMargin). Unloaded pages show gray pulse placeholder |
+| TC-DV-02 | View a multi-page result | Each rendered page has "N / total" badge in bottom-right corner with semi-transparent black background, white text, backdrop-blur | Badges are accurate (e.g., "3 / 12") |
+| TC-DV-03 | Process a large PDF (e.g., 50 pages) and view result | Only visible pages (and those within 300px of viewport) are rendered. Scrolling triggers additional loads | Placeholder pulse animations for pages not yet loaded |
+| TC-DV-04 | Process a Split tool that produces 3 output files | Tab bar appears showing each file name with FileText icon and page count. First file selected by default | Tabs scrollable horizontally. Selected tab has white background, indigo text |
+| TC-DV-05 | Click on a different file tab | Page renderer reloads and shows all pages of newly selected file | Previous file's pages cleared. New file's pages lazy-load from top |
+| TC-DV-06 | On a tool with `showOriginalToggle`, click "Show original" | Page renderer switches to showing original input PDF pages. File tabs disappear. Button text changes to "Show processed" | Clicking "Show processed" switches back |
+| TC-DV-07 | View a result from any tool | Top of preview panel shows: file name (or "N files"), page count, file size, size comparison, processing time | Size reduction in green ("↓ 50% smaller"), increase in gray |
+| TC-DV-08 | View a result with many pages (e.g., 20) | Page renderer container has `max-h-[600px] overflow-y-auto` | Scrollbar appears. Lazy loading triggers on scroll |

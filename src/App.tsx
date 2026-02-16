@@ -10,10 +10,12 @@ import { usePipelineStore } from '@/stores/pipelineStore';
 import { TOOL_MAP } from '@/lib/constants';
 import { Toaster } from 'react-hot-toast';
 import { ArrowLeft } from 'lucide-react';
+import { useThemeStore } from '@/stores/themeStore';
 
 export default function App() {
   const { currentView, currentToolId, setView } = useAppStore();
   const isPipelineExecuting = usePipelineStore((s) => s.isExecuting);
+  const isDark = useThemeStore((s) => s.resolved === 'dark');
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Hash change listener
@@ -62,18 +64,18 @@ export default function App() {
         <div className="max-w-tool mx-auto">
           <button
             onClick={() => setView('grid')}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 focus-ring rounded-lg px-2 py-1"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-4 focus-ring rounded-lg px-2 py-1"
           >
             <ArrowLeft size={16} />
             <span className="text-sm">Back to tools</span>
           </button>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">{tool.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">{tool.name}</h2>
           {tool.component ? (
             <ErrorBoundary>
               <tool.component />
             </ErrorBoundary>
           ) : (
-            <div className="text-center py-20 text-gray-400">
+            <div className="text-center py-20 text-gray-400 dark:text-gray-500">
               <p className="text-lg">Coming soon</p>
               <p className="text-sm mt-1">This tool is not yet implemented.</p>
             </div>
@@ -106,7 +108,16 @@ export default function App() {
         {renderView()}
       </Layout>
       <KeyboardShortcutsHelp isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
-      <Toaster position="top-right" toastOptions={{ duration: 4000, style: { borderRadius: '8px', fontSize: '14px' } }} />
+      <Toaster position="top-right" toastOptions={{
+        duration: 4000,
+        style: {
+          borderRadius: '8px',
+          fontSize: '14px',
+          background: isDark ? '#1f2937' : '#fff',
+          color: isDark ? '#f3f4f6' : '#111827',
+          border: isDark ? '1px solid #374151' : 'none',
+        },
+      }} />
     </>
   );
 }

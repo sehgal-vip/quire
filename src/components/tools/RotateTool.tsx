@@ -129,62 +129,76 @@ export function RotateTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="rotate" />
+
+      {/* Top toolbar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {file.pageCount} page{file.pageCount !== 1 ? 's' : ''}
+          {hasRotations && ` — ${Object.keys(rotations).length} rotated`}
+        </p>
+        <button
+          onClick={handleProcess}
+          disabled={!hasRotations || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RotateCw size={14} />
+          {status === 'processing' ? 'Processing...' : 'Rotate Pages'}
+        </button>
+      </div>
 
       {/* Bulk rotation actions */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-700">Bulk actions</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Bulk actions</h3>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => rotateAll(90)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RotateCw size={14} /> Rotate All 90° CW
           </button>
           <button
             onClick={() => rotateAll(-90)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RotateCcw size={14} /> Rotate All 90° CCW
           </button>
           <button
             onClick={() => rotateAll(180)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RotateCw size={14} /> Rotate All 180°
           </button>
           <button
             onClick={() => rotateSubset('even', 90)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RotateCw size={14} /> Rotate Even 90° CW
           </button>
           <button
             onClick={() => rotateSubset('odd', 90)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RotateCw size={14} /> Rotate Odd 90° CW
           </button>
           {hasRotations && (
             <button
               onClick={clearRotations}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
             >
               <RefreshCw size={14} /> Reset all
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           Click individual thumbnails to cycle rotation (90° increments).
           {hasRotations && (
             <span className="ml-1 text-amber-600">
@@ -209,11 +223,11 @@ export function RotateTool() {
       <button
         onClick={handleProcess}
         disabled={!hasRotations || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <RotateCw size={16} />
         {status === 'processing' ? 'Processing...' : 'Rotate Pages'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

@@ -112,20 +112,30 @@ export function MetadataEditorTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="edit-metadata" />
 
+      {/* Top toolbar */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={handleProcess}
+          disabled={!file || status === 'processing'}
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileText size={14} />
+          {status === 'processing' ? 'Processing...' : 'Save Changes'}
+        </button>
+      </div>
+
       {/* Info note */}
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         Enter the metadata you want to set. Existing metadata will be replaced.
       </p>
 
@@ -133,7 +143,7 @@ export function MetadataEditorTool() {
       <div className="space-y-4">
         {METADATA_FIELDS.map(({ key, label, placeholder }) => (
           <div key={key} className="space-y-1">
-            <label htmlFor={`metadata-${key}`} className="block text-sm font-medium text-gray-700">
+            <label htmlFor={`metadata-${key}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {label}
             </label>
             <input
@@ -142,7 +152,7 @@ export function MetadataEditorTool() {
               value={metadata[key]}
               onChange={(e) => handleFieldChange(key, e.target.value)}
               placeholder={placeholder}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
           </div>
         ))}
@@ -152,7 +162,7 @@ export function MetadataEditorTool() {
       <button
         onClick={handleClearAndProcess}
         disabled={status === 'processing'}
-        className="flex items-center gap-2 px-4 py-2 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-4 py-2 text-sm border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Trash2 size={14} />
         Clear all metadata
@@ -164,11 +174,11 @@ export function MetadataEditorTool() {
       <button
         onClick={handleProcess}
         disabled={!file || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
       >
         <FileText size={16} />
         {status === 'processing' ? 'Processing...' : 'Save Changes'}
-      </button>
+      </button>      </>)}
     </div>
   );
 }

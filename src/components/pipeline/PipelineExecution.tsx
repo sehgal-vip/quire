@@ -41,21 +41,21 @@ function StepStatusIndicator({ status }: { status: StepStatus }) {
   switch (status) {
     case 'pending':
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-300 bg-white">
-          <span className="h-2 w-2 rounded-full bg-gray-300" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+          <span className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />
         </span>
       );
     case 'configuring':
       return (
-        <span className="relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-indigo-500 bg-indigo-50">
+        <span className="relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-30" />
           <span className="h-2 w-2 rounded-full bg-indigo-500" />
         </span>
       );
     case 'processing':
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-indigo-500 bg-indigo-50">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-600 dark:text-indigo-400" />
         </span>
       );
     case 'done':
@@ -72,7 +72,7 @@ function StepStatusIndicator({ status }: { status: StepStatus }) {
       );
     case 'skipped':
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-300 bg-gray-100 text-gray-400">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
           <Minus className="h-4 w-4" />
         </span>
       );
@@ -92,13 +92,18 @@ interface StepControlsProps {
 function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) {
   const set = (key: string, value: unknown) => onChange({ ...options, [key]: value });
 
+  const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300";
+  const inputClass = "w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
+  const hintClass = "text-xs text-gray-500 dark:text-gray-400";
+  const italicClass = "text-sm text-gray-500 dark:text-gray-400 italic";
+
   switch (toolId) {
     case 'rotate':
       return (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Rotation Angle</label>
+          <label className={labelClass}>Rotation Angle</label>
           <select
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className={inputClass}
             value={(options.angle as number) ?? 90}
             onChange={(e) => set('angle', Number(e.target.value))}
           >
@@ -112,30 +117,30 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
     case 'delete-pages':
       return (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Pages to Delete</label>
+          <label className={labelClass}>Pages to Delete</label>
           <input
             type="text"
             placeholder="e.g. 1,3,5-8"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className={inputClass}
             value={(options.pageRange as string) ?? ''}
             onChange={(e) => set('pageRange', e.target.value)}
           />
-          <p className="text-xs text-gray-500">Comma-separated page numbers or ranges.</p>
+          <p className={hintClass}>Comma-separated page numbers or ranges.</p>
         </div>
       );
 
     case 'extract-pages':
       return (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Pages to Extract</label>
+          <label className={labelClass}>Pages to Extract</label>
           <input
             type="text"
             placeholder="e.g. 1-3,5,7"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className={inputClass}
             value={(options.pageRange as string) ?? ''}
             onChange={(e) => set('pageRange', e.target.value)}
           />
-          <p className="text-xs text-gray-500">Comma-separated page numbers or ranges.</p>
+          <p className={hintClass}>Comma-separated page numbers or ranges.</p>
         </div>
       );
 
@@ -147,9 +152,9 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
       return (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Position</label>
+            <label className={labelClass}>Position</label>
             <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.position as string) ?? 'bottom-center'}
               onChange={(e) => set('position', e.target.value)}
             >
@@ -161,9 +166,9 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Format</label>
+            <label className={labelClass}>Format</label>
             <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.format as string) ?? 'number'}
               onChange={(e) => set('format', e.target.value)}
             >
@@ -180,35 +185,35 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
       return (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Watermark Text</label>
+            <label className={labelClass}>Watermark Text</label>
             <input
               type="text"
               placeholder="e.g. CONFIDENTIAL"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.text as string) ?? ''}
               onChange={(e) => set('text', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Font Size</label>
+              <label className={labelClass}>Font Size</label>
               <input
                 type="number"
                 min={8}
                 max={200}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className={inputClass}
                 value={(options.fontSize as number) ?? 48}
                 onChange={(e) => set('fontSize', Number(e.target.value))}
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Opacity</label>
+              <label className={labelClass}>Opacity</label>
               <input
                 type="number"
                 min={0.05}
                 max={1}
                 step={0.05}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className={inputClass}
                 value={(options.opacity as number) ?? 0.3}
                 onChange={(e) => set('opacity', Number(e.target.value))}
               />
@@ -221,21 +226,21 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
       return (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">User Password</label>
+            <label className={labelClass}>User Password</label>
             <input
               type="password"
               placeholder="Password to open the PDF"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.userPassword as string) ?? ''}
               onChange={(e) => set('userPassword', e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Owner Password</label>
+            <label className={labelClass}>Owner Password</label>
             <input
               type="password"
               placeholder="Password for full access"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.ownerPassword as string) ?? ''}
               onChange={(e) => set('ownerPassword', e.target.value)}
             />
@@ -246,11 +251,11 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
     case 'unlock':
       return (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <label className={labelClass}>Password</label>
           <input
             type="password"
             placeholder="Enter PDF password"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className={inputClass}
             value={(options.password as string) ?? ''}
             onChange={(e) => set('password', e.target.value)}
           />
@@ -261,9 +266,9 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
       return (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Position</label>
+            <label className={labelClass}>Position</label>
             <select
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.position as string) ?? 'end'}
               onChange={(e) => set('position', e.target.value)}
             >
@@ -272,12 +277,12 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Number of Pages</label>
+            <label className={labelClass}>Number of Pages</label>
             <input
               type="number"
               min={1}
               max={100}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.count as number) ?? 1}
               onChange={(e) => set('count', Number(e.target.value))}
             />
@@ -288,9 +293,9 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
     case 'scale':
       return (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Target Size</label>
+          <label className={labelClass}>Target Size</label>
           <select
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className={inputClass}
             value={(options.targetSize as string) ?? 'A4'}
             onChange={(e) => set('targetSize', e.target.value)}
           >
@@ -305,7 +310,7 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
 
     case 'reorder':
       return (
-        <p className="text-sm text-gray-500 italic">
+        <p className={italicClass}>
           Pages will be passed through in their current order. Reordering is best done
           in the standalone tool.
         </p>
@@ -315,21 +320,21 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
       return (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <label className={labelClass}>Title</label>
             <input
               type="text"
               placeholder="Document title"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.title as string) ?? ''}
               onChange={(e) => set('title', e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Author</label>
+            <label className={labelClass}>Author</label>
             <input
               type="text"
               placeholder="Author name"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className={inputClass}
               value={(options.author as string) ?? ''}
               onChange={(e) => set('author', e.target.value)}
             />
@@ -339,7 +344,7 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
 
     default:
       return (
-        <p className="text-sm text-gray-500 italic">
+        <p className={italicClass}>
           No additional configuration needed. Click Apply to process.
         </p>
       );
@@ -352,8 +357,6 @@ function PipelineStepControls({ toolId, options, onChange }: StepControlsProps) 
 
 /** Estimate page count from PDF bytes (rough: count /Type /Page entries). */
 function estimatePageCount(bytes: Uint8Array): number {
-  // Very rough heuristic – count occurrences of "/Type /Page" (not "/Pages")
-  // For display purposes only.
   try {
     const text = new TextDecoder('latin1').decode(bytes.slice(0, Math.min(bytes.length, 512_000)));
     const matches = text.match(/\/Type\s*\/Page(?!s)/g);
@@ -472,7 +475,6 @@ export function PipelineExecution() {
       if (stepIndex < totalSteps) {
         advanceToStep(stepIndex + 1);
       }
-      // If it's the final step, the view just stays showing the summary.
     },
     [totalSteps, advanceToStep],
   );
@@ -517,7 +519,6 @@ export function PipelineExecution() {
     (stepIndex: number) => {
       const status = stepStatus[stepIndex];
       if (status === 'done' || status === 'skipped' || status === 'failed') {
-        // Scroll into view only - we just set the current step for viewing
         advanceToStep(stepIndex);
       }
     },
@@ -539,12 +540,10 @@ export function PipelineExecution() {
   const finalOutput = useMemo((): ToolOutput | null => {
     if (!allStepsDone) return null;
 
-    // Walk backwards to find the last 'done' step with an output
     for (let i = totalSteps; i >= 1; i--) {
       if (stepOutputs[i]) return stepOutputs[i];
     }
 
-    // Fallback: wrap the last successful bytes
     const lastBytes = getLastSuccessfulOutput();
     if (lastBytes) {
       return {
@@ -561,10 +560,10 @@ export function PipelineExecution() {
   // --------------------------------------------------
 
   const renderSidebar = () => (
-    <aside className="flex w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-gray-50">
+    <aside className="flex w-64 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
       {/* Header */}
-      <div className="border-b border-gray-200 px-4 py-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Pipeline Steps</h2>
+      <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Pipeline Steps</h2>
       </div>
 
       {/* Step list */}
@@ -577,10 +576,10 @@ export function PipelineExecution() {
               onClick={() => handleStepClick(0)}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                 currentStep === 0
-                  ? 'bg-indigo-50 text-indigo-700 font-medium'
+                  ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-medium'
                   : stepStatus[0] === 'done'
-                    ? 'text-gray-700 hover:bg-gray-100 cursor-pointer'
-                    : 'text-gray-400 cursor-default'
+                    ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                    : 'text-gray-400 dark:text-gray-500 cursor-default'
               }`}
               disabled={currentStep === 0}
             >
@@ -605,10 +604,10 @@ export function PipelineExecution() {
                   onClick={() => handleStepClick(step.index)}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                     isCurrent
-                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                      ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-medium'
                       : status === 'done' || status === 'skipped' || status === 'failed'
-                        ? 'text-gray-700 hover:bg-gray-100 cursor-pointer'
-                        : 'text-gray-400 cursor-default'
+                        ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                        : 'text-gray-400 dark:text-gray-500 cursor-default'
                   }`}
                   disabled={status === 'pending' && !isCurrent}
                 >
@@ -625,11 +624,11 @@ export function PipelineExecution() {
       </nav>
 
       {/* Cancel button */}
-      <div className="border-t border-gray-200 px-4 py-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4">
         <button
           type="button"
           onClick={handleCancelPipeline}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           <XCircle className="h-4 w-4" />
           Cancel Pipeline
@@ -645,8 +644,8 @@ export function PipelineExecution() {
   const renderFileUpload = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">Upload Your PDF</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Upload Your PDF</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Select a PDF file to process through your pipeline of {totalSteps} step
           {totalSteps !== 1 ? 's' : ''}.
         </p>
@@ -673,25 +672,25 @@ export function PipelineExecution() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Step {stepIndex} of {totalSteps}: {tool?.name ?? toolId}
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Configure this step and click Apply to process.
           </p>
         </div>
 
         {/* Input info */}
-        <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-          <FileText className="h-5 w-5 text-gray-400" />
-          <div className="text-sm text-gray-700">
+        <div className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
+          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+          <div className="text-sm text-gray-700 dark:text-gray-300">
             <span className="font-medium">Input:</span>{' '}
             ~{pageCount} page{pageCount !== 1 ? 's' : ''}, {formatFileSize(fileSize)}
           </div>
         </div>
 
         {/* Configuration section */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
           <button
             type="button"
             onClick={() =>
@@ -699,14 +698,14 @@ export function PipelineExecution() {
             }
             className="flex w-full items-center justify-between px-5 py-4 text-left"
           >
-            <span className="text-sm font-medium text-gray-900">Configuration</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Configuration</span>
             <ChevronRight
-              className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
             />
           </button>
 
           {isExpanded && (
-            <div className="border-t border-gray-100 px-5 py-4">
+            <div className="border-t border-gray-100 dark:border-gray-700 px-5 py-4">
               <PipelineStepControls
                 toolId={toolId}
                 options={options}
@@ -723,7 +722,7 @@ export function PipelineExecution() {
           <button
             type="button"
             onClick={() => handleApply(stepIndex)}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 dark:bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:hover:bg-indigo-600"
           >
             <Play className="h-4 w-4" />
             Apply
@@ -732,7 +731,7 @@ export function PipelineExecution() {
           <button
             type="button"
             onClick={() => handleSkip(stepIndex)}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <SkipForward className="h-4 w-4" />
             Skip this step
@@ -751,17 +750,17 @@ export function PipelineExecution() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Processing: {tool?.name ?? selectedTools[stepIndex - 1]}
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Processing step {stepIndex} of {totalSteps}...
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
           <ProgressBar />
-          <p className="mt-4 text-center text-sm text-gray-500">
+          <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
             Please wait while the operation completes.
           </p>
         </div>
@@ -784,27 +783,27 @@ export function PipelineExecution() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Step {stepIndex}: {tool?.name ?? toolId}
           </h2>
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+          <div className="mt-2 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
             <Check className="h-4 w-4" />
             <span>Completed successfully</span>
           </div>
         </div>
 
         {/* Output info */}
-        <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4">
+        <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-              <Check className="h-5 w-5 text-green-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+              <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-green-900">
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">
                 Output: ~{pageCount} page{pageCount !== 1 ? 's' : ''}, {formatFileSize(fileSize)}
               </p>
               {stepOutputs[stepIndex]?.processingTime != null && (
-                <p className="text-xs text-green-700">
+                <p className="text-xs text-green-700 dark:text-green-300">
                   Processed in {(stepOutputs[stepIndex].processingTime / 1000).toFixed(1)}s
                 </p>
               )}
@@ -818,7 +817,7 @@ export function PipelineExecution() {
             <button
               type="button"
               onClick={() => handleContinue(stepIndex)}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 dark:bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:hover:bg-indigo-600"
             >
               Continue to Next Step
               <ChevronRight className="h-4 w-4" />
@@ -827,7 +826,7 @@ export function PipelineExecution() {
             <button
               type="button"
               onClick={() => handleReconfigure(stepIndex)}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <RefreshCw className="h-4 w-4" />
               Reconfigure
@@ -836,7 +835,7 @@ export function PipelineExecution() {
             <button
               type="button"
               onClick={() => handleSkip(stepIndex)}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <SkipForward className="h-4 w-4" />
               Skip &amp; Continue
@@ -859,22 +858,22 @@ export function PipelineExecution() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Step {stepIndex}: {tool?.name ?? toolId}
           </h2>
-          <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+          <div className="mt-2 flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
             <XCircle className="h-4 w-4" />
             <span>Step failed</span>
           </div>
         </div>
 
         {/* Error details */}
-        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-5 py-4">
           <div className="flex gap-3">
-            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
             <div>
-              <p className="text-sm font-medium text-red-900">Error</p>
-              <p className="mt-1 text-sm text-red-700">{errorMsg}</p>
+              <p className="text-sm font-medium text-red-900 dark:text-red-100">Error</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-300">{errorMsg}</p>
             </div>
           </div>
         </div>
@@ -884,7 +883,7 @@ export function PipelineExecution() {
           <button
             type="button"
             onClick={() => handleRetry(stepIndex)}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 dark:bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 dark:hover:bg-indigo-600"
           >
             <RefreshCw className="h-4 w-4" />
             Retry
@@ -893,7 +892,7 @@ export function PipelineExecution() {
           <button
             type="button"
             onClick={() => handleSkip(stepIndex)}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <SkipForward className="h-4 w-4" />
             Skip
@@ -902,7 +901,7 @@ export function PipelineExecution() {
           <button
             type="button"
             onClick={handleCancelPipeline}
-            className="inline-flex items-center gap-2 rounded-xl border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-red-300 dark:border-red-700 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-red-700 dark:text-red-400 shadow-sm transition-colors hover:bg-red-50 dark:hover:bg-red-950"
           >
             <XCircle className="h-4 w-4" />
             Cancel Pipeline
@@ -920,18 +919,18 @@ export function PipelineExecution() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Pipeline Complete</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Pipeline Complete</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             All {totalSteps} step{totalSteps !== 1 ? 's' : ''} have been processed.
           </p>
         </div>
 
         {/* Step summary list */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-5 py-3">
-            <h3 className="text-sm font-medium text-gray-900">Summary</h3>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="border-b border-gray-100 dark:border-gray-700 px-5 py-3">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Summary</h3>
           </div>
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
             {steps.map((step) => {
               const status: StepStatus = stepStatus[step.index] ?? 'pending';
               const Icon = step.iconName ? getToolIcon(step.iconName) : FileText;
@@ -946,18 +945,18 @@ export function PipelineExecution() {
 
               const statusColor =
                 status === 'done'
-                  ? 'text-green-600'
+                  ? 'text-green-600 dark:text-green-400'
                   : status === 'skipped'
-                    ? 'text-gray-500'
+                    ? 'text-gray-500 dark:text-gray-400'
                     : status === 'failed'
-                      ? 'text-red-600'
-                      : 'text-gray-400';
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-gray-400 dark:text-gray-500';
 
               return (
                 <li key={step.index} className="flex items-center gap-3 px-5 py-3">
                   <StepStatusIndicator status={status} />
-                  <Icon className="h-4 w-4 text-gray-500" />
-                  <span className="flex-1 text-sm text-gray-900">{step.name}</span>
+                  <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{step.name}</span>
                   <span className={`text-xs font-medium ${statusColor}`}>{statusLabel}</span>
                 </li>
               );
@@ -974,11 +973,11 @@ export function PipelineExecution() {
         )}
 
         {/* Process another */}
-        <div className="flex items-center gap-3 border-t border-gray-200 pt-6">
+        <div className="flex items-center gap-3 border-t border-gray-200 dark:border-gray-700 pt-6">
           <button
             type="button"
             onClick={handleResetPipeline}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <RefreshCw className="h-4 w-4" />
             Process Another File
@@ -1013,19 +1012,16 @@ export function PipelineExecution() {
         case 'processing':
           return renderProcessing(currentStep);
         case 'done':
-          // If it's the last step and all done, we'd have caught it above.
-          // But if only this step is done (not all), show intermediate result.
           return renderStepDone(currentStep);
         case 'failed':
           return renderFailed(currentStep);
         case 'skipped':
-          // If we're viewing a skipped step (review), show a note
           return (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Step {currentStep}: {TOOL_MAP[selectedTools[currentStep - 1]]?.name ?? selectedTools[currentStep - 1]}
               </h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <SkipForward className="h-4 w-4" />
                 <span>This step was skipped.</span>
               </div>
@@ -1033,8 +1029,6 @@ export function PipelineExecution() {
           );
         case 'pending':
         default:
-          // Should not normally be pending when it's the current step,
-          // but in case of a race, just show configuring
           return renderConfiguring(currentStep);
       }
     }

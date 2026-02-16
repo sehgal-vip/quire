@@ -95,10 +95,10 @@ export function ThumbnailGrid({ pdfBytes, pageCount, selectedPages, onPageClick,
             data-page={i}
             role="gridcell"
             className={`relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
-              isSelected && overlayType === 'selected' ? 'border-indigo-500 ring-2 ring-indigo-200' :
-              isSelected && overlayType === 'delete' ? 'border-red-500 ring-2 ring-red-200' :
-              'border-transparent hover:border-gray-300'
-            } ${isFocused ? 'ring-2 ring-indigo-400 ring-offset-2' : ''}`}
+              isSelected && overlayType === 'selected' ? 'border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-800' :
+              isSelected && overlayType === 'delete' ? 'border-red-500 ring-2 ring-red-200 dark:ring-red-800' :
+              'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+            } ${isFocused ? 'ring-2 ring-indigo-400 dark:ring-indigo-600 ring-offset-2 dark:ring-offset-gray-900' : ''}`}
             onClick={() => onPageClick?.(i)}
             tabIndex={-1}
           >
@@ -106,13 +106,13 @@ export function ThumbnailGrid({ pdfBytes, pageCount, selectedPages, onPageClick,
             {state === 'rendered' && thumb ? (
               <img src={thumb} alt={`Page ${i + 1}`} className="w-full h-full object-cover bg-white" />
             ) : state === 'failed' ? (
-              <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center">
+              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex flex-col items-center justify-center">
                 <AlertTriangle size={20} className="text-amber-400 mb-1" />
-                <span className="text-xs text-gray-400">Page {i + 1}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">Page {i + 1}</span>
               </div>
             ) : (
-              <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
-                <span className="text-xs text-gray-400">{i + 1}</span>
+              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+                <span className="text-xs text-gray-400 dark:text-gray-500">{i + 1}</span>
               </div>
             )}
 
@@ -123,13 +123,13 @@ export function ThumbnailGrid({ pdfBytes, pageCount, selectedPages, onPageClick,
 
             {/* Selection overlay */}
             {isSelected && overlayType === 'selected' && (
-              <div className="absolute inset-0 bg-indigo-500/10 flex items-center justify-center">
-                <CheckCircle size={24} className="text-indigo-600" />
+              <div className="absolute inset-0 bg-indigo-500/10 dark:bg-indigo-400/20 flex items-center justify-center">
+                <CheckCircle size={24} className="text-indigo-600 dark:text-indigo-400" />
               </div>
             )}
             {isSelected && overlayType === 'delete' && (
-              <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                <Trash2 size={24} className="text-red-600" />
+              <div className="absolute inset-0 bg-red-500/20 dark:bg-red-400/30 flex items-center justify-center">
+                <Trash2 size={24} className="text-red-600 dark:text-red-400" />
               </div>
             )}
 

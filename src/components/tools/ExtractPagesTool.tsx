@@ -72,6 +72,35 @@ export function ExtractPagesTool() {
 
       {file && (
         <>
+          {/* Top toolbar */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {file.pageCount} page{file.pageCount !== 1 ? 's' : ''}
+              {selectedPages.size > 0 && ` — ${selectedPages.size} selected`}
+            </p>
+            <div className="flex items-center gap-2">
+              {selectedPages.size > 0 && (
+                <button
+                  onClick={() => setSelectedPages(new Set())}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Reset Selection
+                </button>
+              )}
+              <button
+                onClick={handleProcess}
+                disabled={noneSelected || status === 'processing'}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === 'processing'
+                  ? 'Processing...'
+                  : noneSelected
+                    ? 'Select pages'
+                    : `Extract ${selectedPages.size} Page${selectedPages.size !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+
           <PageSelector
             pageCount={file.pageCount}
             pdfBytes={file.bytes}
@@ -81,32 +110,32 @@ export function ExtractPagesTool() {
 
           {selectedPages.size > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Extract mode
               </label>
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <button
                   onClick={() => setExtractMode('single')}
                   className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                     extractMode === 'single'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   As single PDF
                 </button>
                 <button
                   onClick={() => setExtractMode('individual')}
-                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 dark:border-gray-700 ${
                     extractMode === 'individual'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Each page as separate PDF
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
                 {extractMode === 'single'
                   ? `${selectedPages.size} page${selectedPages.size !== 1 ? 's' : ''} will be combined into one PDF.`
                   : `${selectedPages.size} separate PDF file${selectedPages.size !== 1 ? 's' : ''} will be created.`}
@@ -117,7 +146,7 @@ export function ExtractPagesTool() {
           <button
             onClick={handleProcess}
             disabled={noneSelected || status === 'processing'}
-            className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+            className="w-full py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
           >
             {status === 'processing'
               ? 'Processing...'

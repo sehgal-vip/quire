@@ -1,8 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { UploadedFile, ToolOutput } from '@/types';
 import { workerClient } from '@/lib/pdf-worker-client';
 import { useProcessingStore } from '@/stores/processingStore';
 import { parsePageRange } from '@/lib/page-range-parser';
+import { renderPageThumbnail } from '@/lib/thumbnail-renderer';
 import { FileDropZone } from '@/components/common/FileDropZone';
 import { ProgressBar } from '@/components/common/ProgressBar';
 import { PreviewPanel } from '@/components/common/PreviewPanel';
@@ -25,6 +26,8 @@ export function TextWatermarkTool() {
   const [applyTo, setApplyTo] = useState<ApplyTo>('all');
   const [rangeText, setRangeText] = useState('');
   const [result, setResult] = useState<ToolOutput | null>(null);
+  const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const status = useProcessingStore((s) => s.status);
 
@@ -46,7 +49,6 @@ export function TextWatermarkTool() {
 
   const computedRange = useMemo(() => {
     if (applyTo === 'all' || !parsedRange || parsedRange.error) return undefined;
-    // Convert 1-indexed to 0-indexed
     return parsedRange.pages.map((p) => p - 1);
   }, [applyTo, parsedRange]);
 
@@ -59,10 +61,104 @@ export function TextWatermarkTool() {
     return true;
   }, [file, text, applyTo, parsedRange]);
 
+  // Load first page thumbnail when file changes
+  useEffect(() => {
+    if (!file) {
+      setPageThumbnail(null);
+      return;
+    }
+    let cancelled = false;
+    renderPageThumbnail(file.bytes, 0, 1.0).then((url) => {
+      if (!cancelled && url) setPageThumbnail(url);
+    });
+    return () => { cancelled = true; };
+  }, [file]);
+
+  // Draw the watermark simulation on canvas whenever settings change
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw background (white page)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw thumbnail if available
+    if (pageThumbnail) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, W, H);
+        drawWatermark(ctx, W, H);
+      };
+      img.src = pageThumbnail;
+    } else {
+      // Draw placeholder lines to simulate a page
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      for (let y = 30; y < H - 20; y += 16) {
+        const lineW = y < 50 ? W * 0.5 : W * (0.6 + Math.random() * 0.25);
+        ctx.beginPath();
+        ctx.moveTo(20, y);
+        ctx.lineTo(Math.min(20 + lineW, W - 20), y);
+        ctx.stroke();
+      }
+      drawWatermark(ctx, W, H);
+    }
+  }, [pageThumbnail, text, fontSize, angle, opacity, color, mode]);
+
+  function drawWatermark(ctx: CanvasRenderingContext2D, W: number, H: number) {
+    const displayText = text.trim() || 'Watermark';
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color;
+
+    // Scale font size relative to canvas (preview is smaller than actual page)
+    const scaledFont = Math.max(8, fontSize * (W / 612)); // 612 = typical US Letter width in pts
+
+    if (mode === 'center') {
+      ctx.font = `bold ${scaledFont}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.translate(W / 2, H / 2);
+      ctx.rotate((-angle * Math.PI) / 180);
+      ctx.fillText(displayText, 0, 0);
+    } else {
+      // Tile mode
+      const tileFont = Math.max(6, scaledFont * 0.5);
+      ctx.font = `bold ${tileFont}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const metrics = ctx.measureText(displayText);
+      const textW = metrics.width + 40;
+      const textH = tileFont + 30;
+
+      for (let x = -W; x < W * 2; x += textW) {
+        for (let y = -H; y < H * 2; y += textH) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((-angle * Math.PI) / 180);
+          ctx.fillText(displayText, 0, 0);
+          ctx.restore();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
   const handleFilesLoaded = useCallback((loaded: UploadedFile[]) => {
     setFiles(loaded);
     setResult(null);
     setRangeText('');
+    setPageThumbnail(null);
     useProcessingStore.getState().reset();
   }, []);
 
@@ -100,6 +196,7 @@ export function TextWatermarkTool() {
     setApplyTo('all');
     setRangeText('');
     setResult(null);
+    setPageThumbnail(null);
     useProcessingStore.getState().reset();
   }, []);
 
@@ -113,242 +210,232 @@ export function TextWatermarkTool() {
     );
   }
 
-  // No file loaded
-  if (!file) {
-    return <FileDropZone onFilesLoaded={handleFilesLoaded} />;
-  }
 
   // Configure and process
   return (
     <div className="space-y-6">
       <FileDropZone onFilesLoaded={handleFilesLoaded} />
 
+      {file && (<>
+
       <ToolSuggestions analysis={analysis} currentToolId="text-watermark" />
 
-      {/* Watermark text */}
-      <div className="space-y-2">
-        <label htmlFor="watermark-text" className="block text-sm font-medium text-gray-700">
-          Watermark text
-        </label>
-        <input
-          id="watermark-text"
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Enter watermark text"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-        />
-      </div>
+      {/* Two-column layout: settings left, preview right */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-      {/* Font size slider */}
-      <div className="space-y-2">
-        <label htmlFor="wm-font-size" className="block text-sm font-medium text-gray-700">
-          Font size: <span className="text-indigo-600">{fontSize}pt</span>
-        </label>
-        <input
-          id="wm-font-size"
-          type="range"
-          min={20}
-          max={120}
-          value={fontSize}
-          onChange={(e) => setFontSize(parseInt(e.target.value, 10))}
-          className="w-full accent-indigo-600"
-        />
-        <div className="flex justify-between text-xs text-gray-400">
-          <span>20pt</span>
-          <span>120pt</span>
-        </div>
-      </div>
+        {/* LEFT COLUMN — Settings */}
+        <div className="space-y-5">
 
-      {/* Rotation slider */}
-      <div className="space-y-2">
-        <label htmlFor="wm-angle" className="block text-sm font-medium text-gray-700">
-          Rotation: <span className="text-indigo-600">{angle}&deg;</span>
-        </label>
-        <input
-          id="wm-angle"
-          type="range"
-          min={-90}
-          max={90}
-          value={angle}
-          onChange={(e) => setAngle(parseInt(e.target.value, 10))}
-          className="w-full accent-indigo-600"
-        />
-        <div className="flex justify-between text-xs text-gray-400">
-          <span>-90&deg;</span>
-          <span>0&deg;</span>
-          <span>90&deg;</span>
-        </div>
-      </div>
-
-      {/* Opacity slider */}
-      <div className="space-y-2">
-        <label htmlFor="wm-opacity" className="block text-sm font-medium text-gray-700">
-          Opacity: <span className="text-indigo-600">{Math.round(opacity * 100)}%</span>
-        </label>
-        <input
-          id="wm-opacity"
-          type="range"
-          min={0.05}
-          max={1.0}
-          step={0.05}
-          value={opacity}
-          onChange={(e) => setOpacity(parseFloat(e.target.value))}
-          className="w-full accent-indigo-600"
-        />
-        <div className="flex justify-between text-xs text-gray-400">
-          <span>5%</span>
-          <span>100%</span>
-        </div>
-      </div>
-
-      {/* Color */}
-      <div className="space-y-2">
-        <label htmlFor="wm-color" className="block text-sm font-medium text-gray-700">
-          Color
-        </label>
-        <div className="flex items-center gap-3">
-          <input
-            id="wm-color"
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-          />
-          <span className="text-sm text-gray-500 font-mono">{color}</span>
-        </div>
-      </div>
-
-      {/* Mode toggle */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Placement mode</label>
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-          <button
-            onClick={() => setMode('center')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-              mode === 'center'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            Center
-          </button>
-          <button
-            onClick={() => setMode('tile')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
-              mode === 'tile'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            Tile
-          </button>
-        </div>
-        <p className="text-xs text-gray-400">
-          {mode === 'center'
-            ? 'Single watermark placed at the center of each page.'
-            : 'Watermark repeated in a tiled pattern across each page.'}
-        </p>
-      </div>
-
-      {/* Apply to */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Apply to</label>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
+          {/* Watermark text */}
+          <div className="space-y-2">
+            <label htmlFor="watermark-text" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Watermark text
+            </label>
             <input
-              type="radio"
-              name="wm-applyTo"
-              value="all"
-              checked={applyTo === 'all'}
-              onChange={() => setApplyTo('all')}
-              className="text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">All pages</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="wm-applyTo"
-              value="range"
-              checked={applyTo === 'range'}
-              onChange={() => setApplyTo('range')}
-              className="text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">Page range</span>
-          </label>
-        </div>
-
-        {applyTo === 'range' && (
-          <div className="mt-2">
-            <input
+              id="watermark-text"
               type="text"
-              value={rangeText}
-              onChange={(e) => setRangeText(e.target.value)}
-              placeholder="e.g., 1-5, 8, 10-end"
-              className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none ${
-                parsedRange?.error ? 'border-red-300' : 'border-gray-300'
-              }`}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Enter watermark text"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
-            {parsedRange?.error && (
-              <p className="text-xs text-red-500 mt-1">{parsedRange.error}</p>
+          </div>
+
+          {/* Font size slider */}
+          <div className="space-y-2">
+            <label htmlFor="wm-font-size" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Font size: <span className="text-indigo-600 dark:text-indigo-400">{fontSize}pt</span>
+            </label>
+            <input
+              id="wm-font-size"
+              type="range"
+              min={20}
+              max={120}
+              value={fontSize}
+              onChange={(e) => setFontSize(parseInt(e.target.value, 10))}
+              className="w-full accent-indigo-600"
+            />
+            <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+              <span>20pt</span>
+              <span>120pt</span>
+            </div>
+          </div>
+
+          {/* Rotation slider */}
+          <div className="space-y-2">
+            <label htmlFor="wm-angle" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Rotation: <span className="text-indigo-600 dark:text-indigo-400">{angle}&deg;</span>
+            </label>
+            <input
+              id="wm-angle"
+              type="range"
+              min={-90}
+              max={90}
+              value={angle}
+              onChange={(e) => setAngle(parseInt(e.target.value, 10))}
+              className="w-full accent-indigo-600"
+            />
+            <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+              <span>-90&deg;</span>
+              <span>0&deg;</span>
+              <span>90&deg;</span>
+            </div>
+          </div>
+
+          {/* Opacity slider */}
+          <div className="space-y-2">
+            <label htmlFor="wm-opacity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Opacity: <span className="text-indigo-600 dark:text-indigo-400">{Math.round(opacity * 100)}%</span>
+            </label>
+            <input
+              id="wm-opacity"
+              type="range"
+              min={0.05}
+              max={1.0}
+              step={0.05}
+              value={opacity}
+              onChange={(e) => setOpacity(parseFloat(e.target.value))}
+              className="w-full accent-indigo-600"
+            />
+            <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+              <span>5%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* Color */}
+          <div className="space-y-2">
+            <label htmlFor="wm-color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Color
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                id="wm-color"
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-10 h-10 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+              />
+              <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">{color}</span>
+            </div>
+          </div>
+
+          {/* Mode toggle */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Placement mode</label>
+            <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <button
+                onClick={() => setMode('center')}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  mode === 'center'
+                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                Center
+              </button>
+              <button
+                onClick={() => setMode('tile')}
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 dark:border-gray-700 ${
+                  mode === 'tile'
+                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                Tile
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              {mode === 'center'
+                ? 'Single watermark placed at the center of each page.'
+                : 'Watermark repeated in a tiled pattern across each page.'}
+            </p>
+          </div>
+
+          {/* Apply to */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apply to</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="wm-applyTo"
+                  value="all"
+                  checked={applyTo === 'all'}
+                  onChange={() => setApplyTo('all')}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">All pages</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="wm-applyTo"
+                  value="range"
+                  checked={applyTo === 'range'}
+                  onChange={() => setApplyTo('range')}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Page range</span>
+              </label>
+            </div>
+
+            {applyTo === 'range' && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={rangeText}
+                  onChange={(e) => setRangeText(e.target.value)}
+                  placeholder="e.g., 1-5, 8, 10-end"
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none dark:bg-gray-800 dark:text-gray-100 ${
+                    parsedRange?.error ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                />
+                {parsedRange?.error && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">{parsedRange.error}</p>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
 
-      {/* Visual preview box */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Preview</label>
-        <div className="relative w-full h-48 bg-white border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-          {mode === 'center' ? (
-            <span
-              className="select-none font-bold whitespace-nowrap"
-              style={{
-                fontSize: `${Math.min(fontSize, 48)}px`,
-                color: color,
-                opacity: opacity,
-                transform: `rotate(-${angle}deg)`,
-              }}
-            >
-              {text || 'Watermark'}
-            </span>
-          ) : (
-            <div
-              className="absolute inset-0 flex flex-wrap items-center justify-center gap-8 p-4"
-              style={{ opacity: opacity }}
-            >
-              {Array.from({ length: 9 }).map((_, i) => (
-                <span
-                  key={i}
-                  className="select-none font-bold whitespace-nowrap"
-                  style={{
-                    fontSize: `${Math.min(fontSize * 0.5, 24)}px`,
-                    color: color,
-                    transform: `rotate(-${angle}deg)`,
-                  }}
-                >
-                  {text || 'Watermark'}
-                </span>
-              ))}
-            </div>
-          )}
-          {/* Page outline */}
-          <div className="absolute inset-3 border-2 border-dashed border-gray-200 rounded pointer-events-none" />
+          <ProgressBar />
+
+          {/* Process button */}
+          <button
+            onClick={handleProcess}
+            disabled={!canProcess || status === 'processing'}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
+          >
+            <Droplets size={16} />
+            {status === 'processing' ? 'Processing...' : 'Add Watermark'}
+          </button>
         </div>
+
+        {/* RIGHT COLUMN — Live watermark preview on first page */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Preview
+            <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">Page 1</span>
+          </label>
+          <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 shadow-inner">
+            <div className="relative mx-auto overflow-hidden rounded-lg shadow-md" style={{ maxWidth: 400 }}>
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={566}
+                className="w-full h-auto block bg-white"
+                data-testid="watermark-preview-canvas"
+              />
+              {/* Page label */}
+              <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
+                Page 1 of {file.pageCount}
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      <ProgressBar />
-
-      {/* Process button */}
-      <button
-        onClick={handleProcess}
-        disabled={!canProcess || status === 'processing'}
-        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring"
-      >
-        <Droplets size={16} />
-        {status === 'processing' ? 'Processing...' : 'Add Watermark'}
-      </button>
+      </>)}
     </div>
   );
 }
