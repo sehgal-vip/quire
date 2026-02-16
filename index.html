@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/quire/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Quire — PDF Tools</title>
+    <meta name="description" content="Free client-side PDF manipulation. Split, merge, rotate, watermark, encrypt and more. Your files never leave your browser." />
+    <style>
+      .app-loader{display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,system-ui,sans-serif}
+      .app-loader .spinner{width:40px;height:40px;border:3px solid #E5E7EB;border-top-color:#4F46E5;border-radius:50%;animation:spin .6s linear infinite}
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+  </head>
+  <body>
+    <div id="root"><div class="app-loader"><div class="spinner"></div></div></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
