@@ -31,7 +31,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/quire/',
+  base: '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
