@@ -13,6 +13,8 @@ import { ScaleResizeTool } from '@/components/tools/ScaleResizeTool';
 import { EncryptTool } from '@/components/tools/EncryptTool';
 import { UnlockTool } from '@/components/tools/UnlockTool';
 import { MetadataEditorTool } from '@/components/tools/MetadataEditorTool';
+import { ConvertToPDFTool } from '@/components/tools/ConvertToPDFTool';
+import { EditPDFTool } from '@/components/tools/EditPDFTool';
 
 const time = {
   split: (p: number) => 0.5 + p * 0.01,
@@ -28,6 +30,8 @@ const time = {
   encrypt: (p: number) => 0.5 + p * 0.02,
   unlock: () => 0.5,
   'edit-metadata': () => 0.3,
+  'edit-pdf': (p: number) => 1 + p * 0.03,
+  'convert-to-pdf': () => 2,
 } as Record<string, (p: number, s: number) => number>;
 
 export const CATEGORIES = {
@@ -36,6 +40,8 @@ export const CATEGORIES = {
   stamp: { label: 'Stamp', color: 'purple-500' },
   security: { label: 'Security', color: 'red-500' },
   info: { label: 'Info', color: 'green-500' },
+  edit: { label: 'Edit', color: 'teal-500' },
+  convert: { label: 'Convert', color: 'orange-500' },
 } as const;
 
 export const TOOLS: PDFTool[] = [
@@ -52,6 +58,8 @@ export const TOOLS: PDFTool[] = [
   { id: 'encrypt', name: 'Encrypt PDF', description: 'Password-protect your PDF', icon: 'Lock', category: 'security', categoryColor: 'red-500', acceptsMultipleFiles: false, pipelineCompatible: true, component: EncryptTool, estimateTime: time['encrypt'], generateFilename: (n, o) => generateFilename('encrypt', n, o) },
   { id: 'unlock', name: 'Unlock PDF', description: 'Remove password protection', icon: 'Unlock', category: 'security', categoryColor: 'red-500', acceptsMultipleFiles: false, pipelineCompatible: true, component: UnlockTool, estimateTime: time['unlock'], generateFilename: (n, o) => generateFilename('unlock', n, o) },
   { id: 'edit-metadata', name: 'Edit Metadata', description: 'View and edit document properties', icon: 'FileText', category: 'info', categoryColor: 'green-500', acceptsMultipleFiles: false, pipelineCompatible: true, component: MetadataEditorTool, estimateTime: time['edit-metadata'], generateFilename: (n, o) => generateFilename('edit-metadata', n, o) },
+  { id: 'edit-pdf', name: 'Edit PDF', description: 'Fill forms, add text, and edit content', icon: 'PenLine', category: 'edit', categoryColor: 'teal-500', acceptsMultipleFiles: false, pipelineCompatible: false, component: EditPDFTool, estimateTime: time['edit-pdf'], generateFilename: (n, o) => generateFilename('edit-pdf', n, o) },
+  { id: 'convert-to-pdf', name: 'Convert to PDF', description: 'Convert images and documents to PDF', icon: 'FileUp', category: 'convert', categoryColor: 'orange-500', acceptsMultipleFiles: true, pipelineCompatible: false, component: ConvertToPDFTool, estimateTime: time['convert-to-pdf'], generateFilename: (n, o) => generateFilename('convert-to-pdf', n, o) },
 ];
 
 export const TOOL_MAP: Record<string, PDFTool> = Object.fromEntries(TOOLS.map((t) => [t.id, t]));

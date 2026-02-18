@@ -85,4 +85,24 @@ describe('generateFilename', () => {
     const result = generateFilename('rotate', 'my<file>.pdf');
     expect(result).toBe('myfile_rotated.pdf');
   });
+
+  it('generates edit-pdf filename', () => {
+    const result = generateFilename('edit-pdf', 'doc.pdf');
+    expect(result).toBe('doc_edited.pdf');
+  });
+
+  it('generates convert-to-pdf filename for single file', () => {
+    const result = generateFilename('convert-to-pdf', 'photo.jpg', { fileCount: 1 });
+    expect(result).toBe('photo.pdf');
+  });
+
+  it('generates convert-to-pdf filename for multiple files', () => {
+    const result = generateFilename('convert-to-pdf', 'photo.jpg', { fileCount: 3 });
+    expect(result).toBe('converted.pdf');
+  });
+
+  it('generates convert-to-pdf filename strips extension correctly', () => {
+    const result = generateFilename('convert-to-pdf', 'document.docx', { fileCount: 1 });
+    expect(result).toBe('document.pdf');
+  });
 });

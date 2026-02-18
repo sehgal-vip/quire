@@ -85,6 +85,40 @@ class PDFWorkerClient {
     });
   }
 
+  processConvert(files: Array<{ type: string; bytes?: Uint8Array; blocks?: unknown; name: string; mimeType?: string; width?: number; height?: number }>, config: Record<string, unknown>): Promise<ToolOutput> {
+    const id = crypto.randomUUID();
+    const store = useProcessingStore.getState();
+    store.startProcessing();
+
+    return new Promise((resolve, reject) => {
+      this.pending.set(id, { resolve, reject });
+
+      // Extract unique ArrayBuffers for Transferables (prevents DataCloneError from shared buffers)
+      const transferSet = new Set<ArrayBuffer>();
+      for (const file of files) {
+        if (file.bytes) {
+          const copy = new Uint8Array(file.bytes).buffer;
+          file.bytes = new Uint8Array(copy);
+          transferSet.add(copy);
+        }
+      }
+
+      const fontBytes = config.fontBytes as Record<string, Uint8Array> | undefined;
+      if (fontBytes) {
+        for (const key of Object.keys(fontBytes)) {
+          const copy = new Uint8Array(fontBytes[key]).buffer;
+          fontBytes[key] = new Uint8Array(copy);
+          transferSet.add(copy);
+        }
+      }
+
+      this.worker.postMessage(
+        { id, operation: 'convert-to-pdf', pdfBytes: [], options: { files, config } },
+        Array.from(transferSet)
+      );
+    });
+  }
+
   cancelAll(): void {
     for (const id of this.pending.keys()) {
       this.worker.postMessage({ id, type: 'cancel' });

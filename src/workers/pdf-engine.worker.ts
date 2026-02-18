@@ -894,4 +894,464 @@ operations['edit-metadata'] = async (pdfBytes, options, onProgress) => {
   };
 };
 
+// ---------------------------------------------------------------------------
+// Phase 6 Operations
+// ---------------------------------------------------------------------------
+
+// Helper: get standard page dimensions in points
+function getPageDimensions(size: string, orientation: string): [number, number] {
+  const sizes: Record<string, [number, number]> = {
+    'A4': [595.28, 841.89],
+    'Letter': [612, 792],
+  };
+  const [w, h] = sizes[size] ?? sizes['A4'];
+  if (orientation === 'landscape') return [h, w];
+  return [w, h];
+}
+
+// Helper: calculate fit dimensions for images on a page
+function calculateFit(
+  imgW: number, imgH: number,
+  pageW: number, pageH: number,
+  margin: number,
+  mode: string
+): { x: number; y: number; w: number; h: number } {
+  const availW = pageW - margin * 2;
+  const availH = pageH - margin * 2;
+
+  if (mode === 'original') {
+    // Center at original size (in points: assume 72 DPI)
+    const w = imgW * 72 / 96; // Convert pixels to points
+    const h = imgH * 72 / 96;
+    return { x: (pageW - w) / 2, y: (pageH - h) / 2, w, h };
+  }
+
+  if (mode === 'stretch') {
+    return { x: margin, y: margin, w: availW, h: availH };
+  }
+
+  if (mode === 'cover') {
+    const scale = Math.max(availW / imgW, availH / imgH);
+    const w = imgW * scale;
+    const h = imgH * scale;
+    return { x: (pageW - w) / 2, y: (pageH - h) / 2, w, h };
+  }
+
+  // contain (default)
+  const scale = Math.min(availW / imgW, availH / imgH);
+  const w = imgW * scale;
+  const h = imgH * scale;
+  return { x: (pageW - w) / 2, y: (pageH - h) / 2, w, h };
+}
+
+// Helper: determine auto orientation based on image dimensions
+function autoOrientation(imgW: number, imgH: number, orientation: string): string {
+  if (orientation !== 'auto') return orientation;
+  return imgW > imgH ? 'landscape' : 'portrait';
+}
+
+interface StyledWord {
+  text: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  font: any;
+  bold: boolean;
+  italic: boolean;
+  width: number;
+}
+
+interface StyledSegment {
+  text: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  font: any;
+  width: number;
+}
+
+interface StyledLine {
+  segments: StyledSegment[];
+  totalWidth: number;
+}
+
+/**
+ * convert-to-pdf — Convert images, DOCX, and TXT files to PDF.
+ *
+ * Options:
+ *   files: Array of preprocessed file descriptors
+ *   config: { imagePageSize, imageOrientation, imageFitMode, docPageSize, docOrientation, textFontSize, textLineHeight, margin }
+ */
+operations['convert-to-pdf'] = async (_pdfBytes, options, onProgress, isCancelled) => {
+  const files = options.files as Array<{
+    type: string;
+    name: string;
+    bytes?: Uint8Array;
+    mimeType?: string;
+    width?: number;
+    height?: number;
+    blocks?: Array<{
+      type: string;
+      level?: number;
+      runs?: Array<{ text: string; bold: boolean; italic: boolean; underline: boolean }>;
+      src?: string;
+    }>;
+  }>;
+  const config = options.config as Record<string, unknown>;
+  const margin = (config.margin as number) ?? 36; // NOT || 72 — 0 is valid
+
+  const pdfDoc = await PDFDocument.create();
+  const total = files.length;
+
+  // Embed standard fonts for document pages
+  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const helveticaOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  const helveticaBoldOblique = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getFont(bold: boolean, italic: boolean): any {
+    if (bold && italic) return helveticaBoldOblique;
+    if (bold) return helveticaBold;
+    if (italic) return helveticaOblique;
+    return helvetica;
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    if (isCancelled()) return null;
+    const file = files[i];
+    onProgress({ step: `Converting ${file.name}`, current: i, total });
+
+    if (file.type === 'image' && file.bytes) {
+      // Image page
+      const imgBytes = file.bytes;
+      const mimeType = file.mimeType ?? 'image/png';
+
+      // Embed image — MUST await (async!)
+      const embedded = mimeType === 'image/jpeg' || mimeType === 'image/jpg'
+        ? await pdfDoc.embedJpg(imgBytes)
+        : await pdfDoc.embedPng(imgBytes);
+
+      const imgW = file.width ?? embedded.width;
+      const imgH = file.height ?? embedded.height;
+
+      const orientation = autoOrientation(imgW, imgH, (config.imageOrientation as string) ?? 'auto');
+      const pageSize = (config.imagePageSize as string) ?? 'A4';
+
+      let pageW: number, pageH: number;
+      if (pageSize === 'fit') {
+        // Fit page to image size (in points)
+        pageW = imgW * 72 / 96 + margin * 2;
+        pageH = imgH * 72 / 96 + margin * 2;
+      } else {
+        [pageW, pageH] = getPageDimensions(pageSize, orientation);
+      }
+
+      const fitMode = (config.imageFitMode as string) ?? 'contain';
+      const { x, y, w, h } = calculateFit(imgW, imgH, pageW, pageH, margin, fitMode);
+
+      const page = pdfDoc.addPage([pageW, pageH]);
+      page.drawImage(embedded, { x, y, width: w, height: h });
+
+    } else if (file.type === 'document' || file.type === 'text') {
+      // Document/text pages with block layout
+      const blocks = file.blocks ?? [];
+      const fontSize = (config.textFontSize as number) ?? 12;
+      const lineHeight = (config.textLineHeight as number) ?? 1.5;
+      const pageSize = (config.docPageSize as string) ?? 'A4';
+      const docOrientation = (config.docOrientation as string) ?? 'portrait';
+
+      const [pageW, pageH] = getPageDimensions(pageSize, docOrientation);
+      const contentW = pageW - margin * 2;
+      const lineSpacing = fontSize * lineHeight;
+
+      let page = pdfDoc.addPage([pageW, pageH]);
+      let cursorY = pageH - margin;
+
+      function newPage() {
+        page = pdfDoc.addPage([pageW, pageH]);
+        cursorY = pageH - margin;
+      }
+
+      for (const block of blocks) {
+        if (block.type === 'image' && block.src) {
+          // Inline image from DOCX
+          try {
+            const dataMatch = block.src.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
+            if (dataMatch) {
+              const imgBytes = Uint8Array.from(atob(dataMatch[2]), (c) => c.charCodeAt(0));
+              const isJpeg = dataMatch[1] === 'jpeg' || dataMatch[1] === 'jpg';
+              const emb = isJpeg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes);
+
+              const maxW = contentW;
+              const scale = Math.min(1, maxW / emb.width);
+              const drawW = emb.width * scale;
+              const drawH = emb.height * scale;
+
+              if (cursorY - drawH < margin) newPage();
+
+              cursorY -= drawH;
+              page.drawImage(emb, { x: margin, y: cursorY, width: drawW, height: drawH });
+              cursorY -= lineSpacing * 0.5; // Small gap after image
+            }
+          } catch {
+            // Skip failed inline images
+          }
+          continue;
+        }
+
+        const runs = block.runs ?? [];
+        if (runs.length === 0) continue;
+
+        // Determine block-level font size
+        let blockFontSize = fontSize;
+        let blockExtraSpacing = 0;
+        if (block.type === 'heading') {
+          const level = block.level ?? 2;
+          blockFontSize = fontSize * (level === 1 ? 2 : level === 2 ? 1.5 : level === 3 ? 1.25 : 1.1);
+          blockExtraSpacing = blockFontSize * 0.5;
+        }
+
+        const blockLineSpacing = blockFontSize * lineHeight;
+        let prefix = '';
+        if (block.type === 'list-item') {
+          prefix = '  \u2022 ';
+        }
+
+        // Word-wrap across run boundaries
+        const words: StyledWord[] = [];
+        if (prefix) {
+          const font = getFont(false, false);
+          words.push({ text: prefix, font, bold: false, italic: false, width: font.widthOfTextAtSize(prefix, blockFontSize) });
+        }
+
+        for (const run of runs) {
+          const font = getFont(run.bold || (block.type === 'heading'), run.italic);
+          const runWords = run.text.split(/(\s+)/);
+          for (const w of runWords) {
+            if (w.length === 0) continue;
+            words.push({
+              text: w,
+              font,
+              bold: run.bold || (block.type === 'heading'),
+              italic: run.italic,
+              width: font.widthOfTextAtSize(w, blockFontSize),
+            });
+          }
+        }
+
+        // Build lines
+        const lines: StyledLine[] = [];
+        let currentLine: StyledSegment[] = [];
+        let currentLineWidth = 0;
+
+        for (const word of words) {
+          if (currentLineWidth + word.width > contentW && currentLine.length > 0) {
+            lines.push({ segments: currentLine, totalWidth: currentLineWidth });
+            currentLine = [];
+            currentLineWidth = 0;
+          }
+          currentLine.push({ text: word.text, font: word.font, width: word.width });
+          currentLineWidth += word.width;
+        }
+        if (currentLine.length > 0) {
+          lines.push({ segments: currentLine, totalWidth: currentLineWidth });
+        }
+
+        // Add extra spacing before headings
+        if (blockExtraSpacing > 0) {
+          cursorY -= blockExtraSpacing;
+        }
+
+        // Draw lines
+        for (const line of lines) {
+          cursorY -= blockLineSpacing;
+          if (cursorY < margin) {
+            newPage();
+            cursorY -= blockLineSpacing;
+          }
+
+          let x = margin;
+          for (const seg of line.segments) {
+            const { r, g, b: bVal } = { r: 0, g: 0, b: 0 }; // Black text
+            page.drawText(seg.text, {
+              x,
+              y: cursorY,
+              size: blockFontSize,
+              font: seg.font,
+              color: rgb(r, g, bVal),
+            });
+            x += seg.width;
+          }
+        }
+
+        // Add paragraph spacing
+        cursorY -= blockLineSpacing * 0.3;
+      }
+    }
+  }
+
+  onProgress({ step: 'Conversion complete', current: total, total });
+
+  const saved = await pdfDoc.save();
+  return {
+    files: [
+      {
+        name: 'converted.pdf',
+        bytes: saved.buffer as ArrayBuffer,
+        pageCount: pdfDoc.getPageCount(),
+      },
+    ],
+  };
+};
+
+/**
+ * edit-pdf — Apply text boxes, text edits, and optional form flattening.
+ *
+ * Options:
+ *   textBoxes: TextBox[]
+ *   textEdits: TextEdit[]
+ *   flattenForm: boolean
+ */
+operations['edit-pdf'] = async (pdfBytes, options, onProgress) => {
+  onProgress({ step: 'Applying edits', current: 0, total: 1 });
+
+  const pdfDoc = await PDFDocument.load(pdfBytes[0]);
+
+  // Optional flatten
+  if (options.flattenForm) {
+    try {
+      const form = pdfDoc.getForm();
+      form.flatten();
+    } catch {
+      // No form or already flattened — ignore
+    }
+  }
+
+  const pages = pdfDoc.getPages();
+
+  // Helper: get standard font from family/bold/italic
+  function getStdFont(family: string, bold: boolean, italic: boolean) {
+    if (family === 'Courier') {
+      if (bold && italic) return StandardFonts.CourierBoldOblique;
+      if (bold) return StandardFonts.CourierBold;
+      if (italic) return StandardFonts.CourierOblique;
+      return StandardFonts.Courier;
+    }
+    if (family === 'TimesRoman') {
+      if (bold && italic) return StandardFonts.TimesRomanBoldItalic;
+      if (bold) return StandardFonts.TimesRomanBold;
+      if (italic) return StandardFonts.TimesRomanItalic;
+      return StandardFonts.TimesRoman;
+    }
+    // Helvetica (default)
+    if (bold && italic) return StandardFonts.HelveticaBoldOblique;
+    if (bold) return StandardFonts.HelveticaBold;
+    if (italic) return StandardFonts.HelveticaOblique;
+    return StandardFonts.Helvetica;
+  }
+
+  // Map PDF.js font names to StandardFonts
+  function mapPDFJsFontToStandard(pdfJsFontName: string): string {
+    const name = pdfJsFontName.toLowerCase();
+    if (name.includes('courier')) {
+      if (name.includes('bold') && (name.includes('oblique') || name.includes('italic'))) return 'CourierBoldOblique';
+      if (name.includes('bold')) return 'CourierBold';
+      if (name.includes('oblique') || name.includes('italic')) return 'CourierOblique';
+      return 'Courier';
+    }
+    if (name.includes('times')) {
+      if (name.includes('bold') && (name.includes('italic'))) return 'TimesRomanBoldItalic';
+      if (name.includes('bold')) return 'TimesRomanBold';
+      if (name.includes('italic')) return 'TimesRomanItalic';
+      return 'TimesRoman';
+    }
+    // Default to Helvetica
+    if (name.includes('bold') && (name.includes('oblique') || name.includes('italic'))) return 'HelveticaBoldOblique';
+    if (name.includes('bold')) return 'HelveticaBold';
+    if (name.includes('oblique') || name.includes('italic')) return 'HelveticaOblique';
+    return 'Helvetica';
+  }
+
+  // Draw text boxes
+  const textBoxes = (options.textBoxes ?? []) as Array<{
+    pageIndex: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    text: string;
+    style: { fontFamily: string; fontSize: number; color: string; bold: boolean; italic: boolean };
+  }>;
+
+  for (const tb of textBoxes) {
+    if (tb.pageIndex >= pages.length) continue;
+    const page = pages[tb.pageIndex];
+    const fontEnum = getStdFont(tb.style.fontFamily, tb.style.bold, tb.style.italic);
+    const font = await pdfDoc.embedFont(fontEnum);
+    const { r, g, b: bVal } = parseHexColor(tb.style.color);
+
+    page.drawText(tb.text, {
+      x: tb.x,
+      y: tb.y,
+      size: tb.style.fontSize,
+      font,
+      color: rgb(r, g, bVal),
+      maxWidth: tb.width,
+    });
+  }
+
+  // Apply text edits (cover + redraw)
+  const textEdits = (options.textEdits ?? []) as Array<{
+    pageIndex: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    newText: string;
+    originalFontName: string;
+    fontSize: number;
+    coverColor: string;
+  }>;
+
+  for (const te of textEdits) {
+    if (te.pageIndex >= pages.length) continue;
+    const page = pages[te.pageIndex];
+
+    // Draw cover rect (descender-aware)
+    const coverY = te.y - te.height * 0.25 - 1;
+    const coverH = te.height * 1.25 + 2;
+    const { r: cr, g: cg, b: cb } = parseHexColor(te.coverColor);
+    page.drawRectangle({
+      x: te.x - 1,
+      y: coverY,
+      width: te.width + 2,
+      height: coverH,
+      color: rgb(cr, cg, cb),
+    });
+
+    // Draw new text
+    const fontName = mapPDFJsFontToStandard(te.originalFontName);
+    const fontEnum = StandardFonts[fontName as keyof typeof StandardFonts] ?? StandardFonts.Helvetica;
+    const font = await pdfDoc.embedFont(fontEnum);
+
+    page.drawText(te.newText, {
+      x: te.x,
+      y: te.y,
+      size: te.fontSize,
+      font,
+      color: rgb(0, 0, 0),
+    });
+  }
+
+  onProgress({ step: 'Edit complete', current: 1, total: 1 });
+
+  const saved = await pdfDoc.save();
+  return {
+    files: [
+      {
+        name: 'edited.pdf',
+        bytes: saved.buffer as ArrayBuffer,
+        pageCount: pdfDoc.getPageCount(),
+      },
+    ],
+  };
+};
+
 export { operations, PDFDocument, degrees, StandardFonts, rgb };

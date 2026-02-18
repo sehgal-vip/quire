@@ -65,13 +65,15 @@ describe('Header', () => {
     expect(fn).toHaveBeenCalledOnce();
   });
 
-  it('renders all 5 category names', () => {
+  it('renders all 7 category names', () => {
     render(<Header onShowShortcuts={() => {}} />);
     expect(screen.getByText('Organize')).toBeInTheDocument();
     expect(screen.getByText('Transform')).toBeInTheDocument();
     expect(screen.getByText('Stamp')).toBeInTheDocument();
     expect(screen.getByText('Security')).toBeInTheDocument();
     expect(screen.getByText('Info')).toBeInTheDocument();
+    expect(screen.getByText('Edit')).toBeInTheDocument();
+    expect(screen.getByText('Convert')).toBeInTheDocument();
   });
 
   it('renders tool names in dropdown menus', () => {
@@ -161,15 +163,16 @@ describe('Header', () => {
     const hasPopupButtons = categoryButtons.filter(
       (btn) => btn.getAttribute('aria-haspopup') === 'true'
     );
-    expect(hasPopupButtons).toHaveLength(5);
+    expect(hasPopupButtons).toHaveLength(7);
   });
 
-  it('renders all 13 tools across all categories', () => {
+  it('renders all 15 tools across all categories', () => {
     render(<Header onShowShortcuts={() => {}} />);
     const expectedTools = [
       'Split PDF', 'Merge PDFs', 'Reorder Pages', 'Delete Pages',
       'Extract Pages', 'Add Blank Pages', 'Rotate Pages', 'Scale / Resize',
       'Page Numbers', 'Text Watermark', 'Encrypt PDF', 'Unlock PDF', 'Edit Metadata',
+      'Edit PDF', 'Convert to PDF',
     ];
     for (const name of expectedTools) {
       expect(screen.getByText(name)).toBeInTheDocument();

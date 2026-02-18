@@ -9,4 +9,21 @@ export const ERRORS = {
   MERGE_MIN_FILES: 'Merge requires at least 2 PDF files.',
   NON_LATIN_WARNING: 'Your text contains non-Latin characters. These may not display correctly with the standard font.',
   ANNOTATIONS_WARNING: 'Note: Annotations and form fields may not be preserved.',
+  // Edit PDF
+  NO_FORM_FIELDS: 'This PDF does not contain any form fields.',
+  NO_EDITABLE_TEXT: 'No editable text found on this page.',
+  EDIT_TEXT_LIMITATION: 'Text editing replaces text visually. The original text layer is covered and redrawn.',
+  UNSAVED_CHANGES: 'You have unsaved changes. Are you sure you want to leave?',
+  // Convert to PDF
+  NO_FILES_ADDED: 'Please add at least one file to convert.',
+  IMAGE_LOAD_FAILED: 'Failed to load image. The file may be corrupted or in an unsupported format.',
+  ANIMATED_GIF_NOTE: 'Animated GIFs will be converted using the first frame only.',
+  MAX_FILES_EXCEEDED: 'Maximum of 50 files can be converted at once.',
+  EMPTY_DOCUMENT: 'The document appears to be empty.',
+  DOC_NOT_SUPPORTED: 'Legacy .doc files are not supported. Please convert to .docx first.',
+  DOCX_PARSE_FAILED: 'Failed to parse the DOCX file. It may be corrupted.',
+  DOCX_LAYOUT_NOTE: 'DOCX conversion preserves text and basic formatting. Complex layouts, headers/footers, and embedded fonts may differ from the original.',
+  TABLE_SIMPLIFIED: 'Tables are converted to simplified text layout.',
+  CJK_NOT_SUPPORTED: 'Chinese, Japanese, and Korean characters are not supported in this version.',
+  UNDERLINE_NOT_SUPPORTED: 'Underlined text will appear without underline in the converted PDF.',
 } as const;

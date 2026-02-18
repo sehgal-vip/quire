@@ -36,7 +36,7 @@ describe('ToolGrid', () => {
     usePipelineStore.getState().clearPipeline();
   });
 
-  it('U-LY-03: renders all 13 tool cards', () => {
+  it('U-LY-03: renders all 15 tool cards', () => {
     render(<ToolGrid />);
     // Check for all tool names
     expect(screen.getByText('Split PDF')).toBeInTheDocument();
@@ -52,6 +52,8 @@ describe('ToolGrid', () => {
     expect(screen.getByText('Encrypt PDF')).toBeInTheDocument();
     expect(screen.getByText('Unlock PDF')).toBeInTheDocument();
     expect(screen.getByText('Edit Metadata')).toBeInTheDocument();
+    expect(screen.getByText('Edit PDF')).toBeInTheDocument();
+    expect(screen.getByText('Convert to PDF')).toBeInTheDocument();
   });
 
   it('U-LY-04: renders category headers', () => {
@@ -61,6 +63,8 @@ describe('ToolGrid', () => {
     expect(screen.getByText('Stamp')).toBeInTheDocument();
     expect(screen.getByText('Security')).toBeInTheDocument();
     expect(screen.getByText('Info')).toBeInTheDocument();
+    expect(screen.getByText('Edit')).toBeInTheDocument();
+    expect(screen.getByText('Convert')).toBeInTheDocument();
   });
 
   it('has mode toggle buttons', () => {

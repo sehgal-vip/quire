@@ -5,12 +5,14 @@ import type { PDFTool } from '@/types';
 import {
   Scissors, Layers, ArrowUpDown, Trash2, FileOutput, FilePlus,
   RotateCw, Maximize, Hash, Type, Lock, Unlock, FileText,
+  PenLine, FileUp,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 const iconMap: Record<string, LucideIcon> = {
   Scissors, Layers, ArrowUpDown, Trash2, FileOutput, FilePlus,
   RotateCw, Maximize, Hash, Type, Lock, Unlock, FileText,
+  PenLine, FileUp,
 };
 
 const categoryColorMap: Record<string, string> = {
@@ -19,6 +21,8 @@ const categoryColorMap: Record<string, string> = {
   'purple-500': 'border-l-purple-500',
   'red-500': 'border-l-red-500',
   'green-500': 'border-l-green-500',
+  'teal-500': 'border-l-teal-500',
+  'orange-500': 'border-l-orange-500',
 };
 
 const categoryDotMap: Record<string, string> = {
@@ -27,6 +31,8 @@ const categoryDotMap: Record<string, string> = {
   'purple-500': 'bg-purple-500',
   'red-500': 'bg-red-500',
   'green-500': 'bg-green-500',
+  'teal-500': 'bg-teal-500',
+  'orange-500': 'bg-orange-500',
 };
 
 const categoryIconColorMap: Record<string, string> = {
@@ -35,6 +41,8 @@ const categoryIconColorMap: Record<string, string> = {
   'purple-500': 'text-purple-500',
   'red-500': 'text-red-500',
   'green-500': 'text-green-500',
+  'teal-500': 'text-teal-500',
+  'orange-500': 'text-orange-500',
 };
 
 export function ToolGrid() {

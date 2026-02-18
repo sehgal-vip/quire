@@ -5,7 +5,7 @@ export interface PDFTool {
   name: string;
   description: string;
   icon: string;
-  category: 'organize' | 'transform' | 'stamp' | 'security' | 'info';
+  category: 'organize' | 'transform' | 'stamp' | 'security' | 'info' | 'edit' | 'convert';
   categoryColor: string;
   acceptsMultipleFiles: boolean;
   pipelineCompatible: boolean;

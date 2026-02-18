@@ -6,12 +6,25 @@ function stripPdfExt(name: string): string {
   return name.replace(/\.pdf$/i, '');
 }
 
+function stripExt(name: string): string {
+  return name.replace(/\.[^.]+$/, '');
+}
+
 export function generateFilename(
   toolId: string,
   originalName: string,
   options?: Record<string, unknown>
 ): string {
   const base = stripPdfExt(originalName);
+
+  // Special case: convert-to-pdf
+  if (toolId === 'convert-to-pdf') {
+    const fileCount = (options?.fileCount as number) ?? 1;
+    if (fileCount > 1) {
+      return sanitize('converted.pdf');
+    }
+    return sanitize(`${stripExt(originalName)}.pdf`);
+  }
 
   const suffixMap: Record<string, string> = {
     split: `_pages_${(options?.range as string) || 'selected'}`,
@@ -27,6 +40,7 @@ export function generateFilename(
     encrypt: '_encrypted',
     unlock: '_unlocked',
     'edit-metadata': '_edited',
+    'edit-pdf': '_edited',
   };
 
   const suffix = suffixMap[toolId] || '_processed';
