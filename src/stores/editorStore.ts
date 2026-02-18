@@ -47,7 +47,7 @@ export type EditorAction =
   | { type: 'addTextBox'; textBox: TextBox }
   | { type: 'deleteTextBox'; textBox: TextBox }
   | { type: 'moveTextBox'; id: string; fromX: number; fromY: number; toX: number; toY: number }
-  | { type: 'resizeTextBox'; id: string; fromWidth: number; fromHeight: number; toWidth: number; toHeight: number }
+  | { type: 'resizeTextBox'; id: string; fromY: number; fromWidth: number; fromHeight: number; toY: number; toWidth: number; toHeight: number }
   | { type: 'editTextBox'; id: string; fromText: string; toText: string }
   | { type: 'editTextBoxStyle'; id: string; fromStyle: TextStyle; toStyle: TextStyle }
   | { type: 'addTextEdit'; textEdit: TextEdit }
@@ -114,7 +114,7 @@ function reverseAction(action: EditorAction): EditorAction {
     case 'moveTextBox':
       return { type: 'moveTextBox', id: action.id, fromX: action.toX, fromY: action.toY, toX: action.fromX, toY: action.fromY };
     case 'resizeTextBox':
-      return { type: 'resizeTextBox', id: action.id, fromWidth: action.toWidth, fromHeight: action.toHeight, toWidth: action.fromWidth, toHeight: action.fromHeight };
+      return { type: 'resizeTextBox', id: action.id, fromY: action.toY, fromWidth: action.toWidth, fromHeight: action.toHeight, toY: action.fromY, toWidth: action.fromWidth, toHeight: action.fromHeight };
     case 'editTextBox':
       return { type: 'editTextBox', id: action.id, fromText: action.toText, toText: action.fromText };
     case 'editTextBoxStyle':
@@ -143,7 +143,7 @@ function applyAction(state: EditorState, action: EditorAction): Partial<EditorSt
     case 'resizeTextBox':
       return {
         textBoxes: state.textBoxes.map(tb =>
-          tb.id === action.id ? { ...tb, width: action.toWidth, height: action.toHeight } : tb
+          tb.id === action.id ? { ...tb, y: action.toY, width: action.toWidth, height: action.toHeight } : tb
         ),
       };
     case 'editTextBox':

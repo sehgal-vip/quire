@@ -26,6 +26,10 @@ describe('getStandardFont', () => {
     expect(getStandardFont('Arial', false, false)).toBe('Helvetica');
     expect(getStandardFont('SomeFont', true, true)).toBe('HelveticaBoldOblique');
   });
+
+  it('defaults to Helvetica for empty string', () => {
+    expect(getStandardFont('', false, false)).toBe('Helvetica');
+  });
 });
 
 describe('mapPDFJsFontToStandard', () => {
@@ -58,6 +62,17 @@ describe('mapPDFJsFontToStandard', () => {
   it('handles italic variant in unknown fonts', () => {
     expect(mapPDFJsFontToStandard('SomeFont-BoldItalic')).toBe('HelveticaBoldOblique');
     expect(mapPDFJsFontToStandard('SomeFont-Italic')).toBe('HelveticaOblique');
+  });
+
+  it('is case-insensitive', () => {
+    expect(mapPDFJsFontToStandard('HELVETICA-BOLD')).toBe('HelveticaBold');
+    expect(mapPDFJsFontToStandard('courier-oblique')).toBe('CourierOblique');
+    expect(mapPDFJsFontToStandard('TIMES-BOLDITALIC')).toBe('TimesRomanBoldItalic');
+  });
+
+  it('handles Courier italic via italic keyword', () => {
+    expect(mapPDFJsFontToStandard('Courier-Italic')).toBe('CourierOblique');
+    expect(mapPDFJsFontToStandard('Courier-BoldItalic')).toBe('CourierBoldOblique');
   });
 });
 
@@ -101,6 +116,18 @@ describe('coordinate conversion', () => {
       expect(result.x).toBeCloseTo(100);
       expect(result.y).toBeCloseTo(742);
     });
+
+    it('top of page returns high PDF Y', () => {
+      const vp = makeViewport(1.0);
+      const result = screenToPDF(0, 0, { left: 0, top: 0 }, vp);
+      expect(result.y).toBeCloseTo(842); // top of page in PDF
+    });
+
+    it('bottom of page returns low PDF Y', () => {
+      const vp = makeViewport(1.0);
+      const result = screenToPDF(0, 842, { left: 0, top: 0 }, vp);
+      expect(result.y).toBeCloseTo(0); // bottom of page in PDF
+    });
   });
 
   describe('pdfToScreen', () => {
@@ -116,6 +143,20 @@ describe('coordinate conversion', () => {
       const result = pdfToScreen(100, 742, vp);
       expect(result.x).toBeCloseTo(200);
       expect(result.y).toBeCloseTo(200);
+    });
+
+    it('PDF origin (0,0) maps to bottom-left of screen', () => {
+      const vp = makeViewport(1.0);
+      const result = pdfToScreen(0, 0, vp);
+      expect(result.x).toBeCloseTo(0);
+      expect(result.y).toBeCloseTo(842); // bottom of canvas
+    });
+
+    it('high PDF Y maps to top of screen', () => {
+      const vp = makeViewport(1.0);
+      const result = pdfToScreen(0, 842, vp);
+      expect(result.x).toBeCloseTo(0);
+      expect(result.y).toBeCloseTo(0); // top of canvas
     });
   });
 
@@ -138,7 +179,22 @@ describe('coordinate conversion', () => {
       expect(result.height).toBeCloseTo(100);
     });
 
-    it('round-trips coordinates', () => {
+    it('rect at PDF origin has correct screen position', () => {
+      const vp = makeViewport(1.0);
+      const result = pdfRectToScreen({ x: 0, y: 0, width: 100, height: 50 }, vp);
+      expect(result.left).toBeCloseTo(0);
+      expect(result.top).toBeCloseTo(792); // 842 - 50
+      expect(result.width).toBeCloseTo(100);
+      expect(result.height).toBeCloseTo(50);
+    });
+
+    it('zero-height rect produces zero screen height', () => {
+      const vp = makeViewport(1.0);
+      const result = pdfRectToScreen({ x: 100, y: 500, width: 200, height: 0 }, vp);
+      expect(result.height).toBeCloseTo(0);
+    });
+
+    it('round-trips coordinates at zoom 1.5', () => {
       const vp = makeViewport(1.5);
       const original = { x: 150, y: 500, width: 100, height: 30 };
       const screen = pdfRectToScreen(original, vp);
@@ -151,6 +207,79 @@ describe('coordinate conversion', () => {
       expect(topLeftPdf.y).toBeCloseTo(original.y + original.height);
       expect(bottomRightPdf.x).toBeCloseTo(original.x + original.width);
       expect(bottomRightPdf.y).toBeCloseTo(original.y);
+    });
+
+    it('round-trips at zoom 0.5', () => {
+      const vp = makeViewport(0.5);
+      const original = { x: 50, y: 100, width: 300, height: 80 };
+      const screen = pdfRectToScreen(original, vp);
+
+      const topLeftPdf = screenToPDF(screen.left, screen.top, { left: 0, top: 0 }, vp);
+      const bottomRightPdf = screenToPDF(screen.left + screen.width, screen.top + screen.height, { left: 0, top: 0 }, vp);
+
+      expect(topLeftPdf.x).toBeCloseTo(original.x);
+      expect(topLeftPdf.y).toBeCloseTo(original.y + original.height);
+      expect(bottomRightPdf.x).toBeCloseTo(original.x + original.width);
+      expect(bottomRightPdf.y).toBeCloseTo(original.y);
+    });
+
+    it('round-trips at zoom 3.0', () => {
+      const vp = makeViewport(3.0);
+      const original = { x: 200, y: 600, width: 150, height: 40 };
+      const screen = pdfRectToScreen(original, vp);
+
+      const topLeftPdf = screenToPDF(screen.left, screen.top, { left: 0, top: 0 }, vp);
+      const bottomRightPdf = screenToPDF(screen.left + screen.width, screen.top + screen.height, { left: 0, top: 0 }, vp);
+
+      expect(topLeftPdf.x).toBeCloseTo(original.x);
+      expect(topLeftPdf.y).toBeCloseTo(original.y + original.height);
+      expect(bottomRightPdf.x).toBeCloseTo(original.x + original.width);
+      expect(bottomRightPdf.y).toBeCloseTo(original.y);
+    });
+  });
+
+  describe('text box positioning (bug regression)', () => {
+    it('click at top of page: pdfY is large, box bottom (y) should be pdfY - height', () => {
+      // When user clicks near top of page, screenToPDF returns high pdfY
+      const vp = makeViewport(1.0);
+      const clickResult = screenToPDF(100, 50, { left: 0, top: 0 }, vp);
+      // pdfY should be near top of page (high value)
+      expect(clickResult.y).toBeCloseTo(792);
+
+      // Text box: y (bottom) = pdfY - height, so top = pdfY
+      const boxHeight = 30;
+      const boxY = clickResult.y - boxHeight; // 762
+      const boxRect = pdfRectToScreen({ x: clickResult.x, y: boxY, width: 200, height: boxHeight }, vp);
+
+      // Screen top of the box should be at the click y position
+      expect(boxRect.top).toBeCloseTo(50);
+    });
+
+    it('click at middle of page: box appears at click point', () => {
+      const vp = makeViewport(1.0);
+      const clickResult = screenToPDF(200, 421, { left: 0, top: 0 }, vp);
+      expect(clickResult.y).toBeCloseTo(421);
+
+      const boxHeight = 30;
+      const boxY = clickResult.y - boxHeight;
+      const boxRect = pdfRectToScreen({ x: clickResult.x, y: boxY, width: 200, height: boxHeight }, vp);
+      expect(boxRect.top).toBeCloseTo(421);
+    });
+
+    it('resize: increasing height while decreasing y keeps top edge fixed', () => {
+      const vp = makeViewport(1.0);
+      const original = { x: 100, y: 500, width: 200, height: 30 };
+      const originalScreen = pdfRectToScreen(original, vp);
+
+      // Simulate resize: drag down by 20 screen pixels at zoom 1
+      const dh = 20;
+      const resized = { x: 100, y: 500 - dh, width: 200, height: 30 + dh };
+      const resizedScreen = pdfRectToScreen(resized, vp);
+
+      // Top edge should not move
+      expect(resizedScreen.top).toBeCloseTo(originalScreen.top);
+      // Height should increase by 20 screen pixels
+      expect(resizedScreen.height).toBeCloseTo(originalScreen.height + dh);
     });
   });
 });

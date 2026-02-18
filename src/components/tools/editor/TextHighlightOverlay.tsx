@@ -34,15 +34,18 @@ export function TextHighlightOverlay({ viewport, pdfPage, coverColor }: TextHigh
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((item: any) => item.str && item.str.length > 0)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((item: any) => ({
-            str: item.str,
-            x: item.transform[4], // Raw PDF X
-            y: item.transform[5], // Raw PDF Y — do NOT flip
-            width: item.width,    // Already in PDF points
-            height: item.height,
-            fontName: item.fontName ?? 'Helvetica',
-            fontSize: Math.abs(item.transform[3]) || 12,
-          }));
+          .map((item: any) => {
+            const fontSize = Math.abs(item.transform[3]) || 12;
+            return {
+              str: item.str,
+              x: item.transform[4], // Raw PDF X
+              y: item.transform[5], // Raw PDF Y — do NOT flip
+              width: item.width,    // Already in PDF points
+              height: item.height > 0 ? item.height : fontSize, // Fallback to fontSize when height is 0
+              fontName: item.fontName ?? 'Helvetica',
+              fontSize,
+            };
+          });
         setExtractedText(currentPage, extracted);
       } catch {
         // Extraction failed — silent

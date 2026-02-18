@@ -73,7 +73,6 @@ export function EditorSidebar({ pdfDoc, collapsed, onToggle }: EditorSidebarProp
               ref={(el) => {
                 if (el) {
                   canvasRefs.current.set(pageNum, el);
-                  renderThumbnail(pageNum, el);
                 }
               }}
               className="w-full"

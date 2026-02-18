@@ -80,30 +80,30 @@ export function EditPDFTool() {
     if (!isEditing) return;
 
     const handler = (e: KeyboardEvent) => {
-      // Prevent App.tsx global Escape handler from firing
-      e.stopPropagation();
-
       const isMod = e.metaKey || e.ctrlKey;
 
       if (isMod && e.key === 'z' && !e.shiftKey) {
+        e.stopPropagation();
         e.preventDefault();
         useEditorStore.getState().undo();
+        return;
       }
-      if (isMod && e.key === 'z' && e.shiftKey) {
+      if (isMod && (e.key === 'z' && e.shiftKey || e.key === 'Z')) {
+        e.stopPropagation();
         e.preventDefault();
         useEditorStore.getState().redo();
-      }
-      if (isMod && e.key === 'Z') {
-        e.preventDefault();
-        useEditorStore.getState().redo();
+        return;
       }
       if (e.key === 'Delete' || (e.key === 'Backspace' && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement))) {
         const state = useEditorStore.getState();
         if (state.mode === 'add-text' && state.selectedTextBoxId) {
+          e.stopPropagation();
           state.removeTextBox(state.selectedTextBoxId);
+          return;
         }
       }
       if (e.key === 'Escape') {
+        e.stopPropagation();
         useEditorStore.getState().setSelectedTextBoxId(null);
       }
     };

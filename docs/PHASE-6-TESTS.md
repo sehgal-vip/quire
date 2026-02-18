@@ -2,7 +2,7 @@
 
 ## Overview
 
-Phase 6 introduces 2 new tools (Edit PDF and Convert to PDF) and adds **85+ new test cases** across 6 new test files plus updates to 4 existing test files. Total test count: **189 tests** across **19 test files** (lib + store).
+Phase 6 introduces 2 new tools (Edit PDF and Convert to PDF) and adds **125+ new test cases** across 6 new test files plus updates to 4 existing test files. Total test count: **401 tests** across **35 test files** (full suite).
 
 ---
 
@@ -62,7 +62,7 @@ Tests the file preprocessing utilities (`src/lib/convert-preprocessor.ts`).
 | CP-09 | getFileType unsupported | `.zip`, `.css`, `.pdf` → `null` |
 | CP-10 | ACCEPTED_EXTENSIONS | Contains all expected file extensions |
 
-### 4. `src/__tests__/lib/pdf-editor-utils.test.ts` (18 tests)
+### 4. `src/__tests__/lib/pdf-editor-utils.test.ts` (32 tests)
 
 Tests coordinate conversion and font mapping (`src/lib/pdf-editor-utils.ts`).
 
@@ -72,37 +72,77 @@ Tests coordinate conversion and font mapping (`src/lib/pdf-editor-utils.ts`).
 | EU-02 | getStandardFont Courier (4) | All 4 variants |
 | EU-03 | getStandardFont TimesRoman (4) | All 4 variants |
 | EU-04 | getStandardFont unknown family | Defaults to Helvetica variants |
-| EU-05 | mapPDFJsFontToStandard Helvetica | Maps Helvetica, Helvetica-Bold, etc. |
-| EU-06 | mapPDFJsFontToStandard Courier | Maps Courier variants |
-| EU-07 | mapPDFJsFontToStandard Times | Maps Times variants |
-| EU-08 | mapPDFJsFontToStandard unknown | Maps `g_d0_f1` to Helvetica |
-| EU-09 | mapPDFJsFontToStandard italic unknown | Maps BoldItalic to HelveticaBoldOblique |
-| EU-10 | screenToPDF zoom 1.0 | Click at (100, 100) → (100, 742) |
-| EU-11 | screenToPDF zoom 2.0 | Correctly divides by scale |
-| EU-12 | screenToPDF zoom 0.5 | Correctly divides by scale |
-| EU-13 | screenToPDF with offset | Subtracts canvas left/top |
-| EU-14 | pdfToScreen zoom 1.0 | (100, 742) → (100, 100) |
-| EU-15 | pdfToScreen zoom 2.0 | Doubles screen coordinates |
-| EU-16 | pdfRectToScreen zoom 1.0 | Correct left/top/width/height |
-| EU-17 | pdfRectToScreen zoom 2.0 | Scales dimensions |
-| EU-18 | **Round-trip coordinates** | screenToPDF(pdfRectToScreen(rect)) ≈ original rect |
+| EU-05 | getStandardFont empty string | Defaults to Helvetica |
+| EU-06 | mapPDFJsFontToStandard Helvetica | Maps Helvetica, Helvetica-Bold, etc. |
+| EU-07 | mapPDFJsFontToStandard Courier | Maps Courier variants |
+| EU-08 | mapPDFJsFontToStandard Times | Maps Times variants |
+| EU-09 | mapPDFJsFontToStandard unknown | Maps `g_d0_f1` to Helvetica |
+| EU-10 | mapPDFJsFontToStandard italic unknown | Maps BoldItalic to HelveticaBoldOblique |
+| EU-11 | mapPDFJsFontToStandard case-insensitive | HELVETICA-BOLD, courier-oblique, TIMES-BOLDITALIC |
+| EU-12 | mapPDFJsFontToStandard Courier italic | Courier-Italic → CourierOblique |
+| EU-13 | screenToPDF zoom 1.0 | Click at (100, 100) → (100, 742) |
+| EU-14 | screenToPDF zoom 2.0 | Correctly divides by scale |
+| EU-15 | screenToPDF zoom 0.5 | Correctly divides by scale |
+| EU-16 | screenToPDF with offset | Subtracts canvas left/top |
+| EU-17 | screenToPDF top of page | Returns high PDF Y |
+| EU-18 | screenToPDF bottom of page | Returns low PDF Y |
+| EU-19 | pdfToScreen zoom 1.0 | (100, 742) → (100, 100) |
+| EU-20 | pdfToScreen zoom 2.0 | Doubles screen coordinates |
+| EU-21 | pdfToScreen origin | (0,0) → bottom-left of screen |
+| EU-22 | pdfToScreen high Y | High PDF Y → top of screen |
+| EU-23 | pdfRectToScreen zoom 1.0 | Correct left/top/width/height |
+| EU-24 | pdfRectToScreen zoom 2.0 | Scales dimensions |
+| EU-25 | pdfRectToScreen at PDF origin | Correct screen bottom-left |
+| EU-26 | pdfRectToScreen zero height | Zero screen height |
+| EU-27 | **Round-trip zoom 1.5** | screenToPDF(pdfRectToScreen(rect)) ≈ original rect |
+| EU-28 | **Round-trip zoom 0.5** | Same identity at half zoom |
+| EU-29 | **Round-trip zoom 3.0** | Same identity at max zoom |
+| EU-30 | **Text box click position** | Click y maps to box top, not bottom (bug regression) |
+| EU-31 | **Text box click middle** | Box appears at click point in page middle |
+| EU-32 | **Resize keeps top edge fixed** | Increasing height + decreasing y = fixed top |
 
-### 5. `src/__tests__/stores/editorStore.test.ts` (10 tests)
+### 5. `src/__tests__/stores/editorStore.test.ts` (36 tests)
 
 Tests the editor Zustand store (`src/stores/editorStore.ts`).
 
 | Test ID | Test Case | Description |
 |---------|-----------|-------------|
-| ES-01 | Initial state | mode='form-fill', zoom=1.0, empty arrays, not dirty |
-| ES-02 | Set mode | `setMode('add-text')` updates mode |
-| ES-03 | **Zoom clamping** | 5.0 → 3.0, 0.1 → 0.5, 1.5 → 1.5 |
-| ES-04 | Add/remove text boxes | addTextBox increases length, removeTextBox decreases |
-| ES-05 | Undo/redo add text box | Undo removes, redo re-adds |
-| ES-06 | Undo/redo remove text box | Undo restores, redo re-removes |
-| ES-07 | Add/remove text edits | Works same as text boxes |
-| ES-08 | Undo/redo text edits | Symmetric undo/redo |
-| ES-09 | Reset clears all state | Back to initial state |
-| ES-10 | **pushAction clears redo stack** | New action after undo wipes redo |
+| ES-01 | Initial state | mode='form-fill', zoom=1.0, empty arrays, not dirty, empty extractedText/pageRotations |
+| ES-02 | Set mode deselects text box | `setMode('add-text')` sets mode and clears selectedTextBoxId |
+| ES-03 | Set page deselects text box | `setCurrentPage(3)` sets page and clears selection |
+| ES-04 | **Zoom clamp max** | 5.0 → 3.0 |
+| ES-05 | **Zoom clamp min** | 0.1 → 0.5 |
+| ES-06 | Zoom valid values | 1.5 → 1.5 |
+| ES-07 | Zoom exact boundaries | 0.5 → 0.5, 3.0 → 3.0 |
+| ES-08 | Add/remove text boxes | addTextBox increases length, removeTextBox decreases |
+| ES-09 | addTextBox pushes undo, clears redo | Undo stack grows, redo cleared |
+| ES-10 | removeTextBox pushes undo | deleteTextBox action on undo stack |
+| ES-11 | removeTextBox deselects removed box | Selected becomes null |
+| ES-12 | removeTextBox keeps other selection | Different box stays selected |
+| ES-13 | removeTextBox ignores non-existent | No-op, undo stack unchanged |
+| ES-14 | updateTextBox partial update | Only specified fields change |
+| ES-15 | Undo/redo add text box | Undo removes, redo re-adds |
+| ES-16 | Undo/redo remove text box | Undo restores, redo re-removes |
+| ES-17 | **Undo/redo moveTextBox** | Coordinates restored on undo, re-applied on redo |
+| ES-18 | **Undo/redo resizeTextBox with Y** | y, width, height all restored (bug regression) |
+| ES-19 | Undo/redo editTextBox | Text content restored |
+| ES-20 | Undo/redo editTextBoxStyle | Style object restored |
+| ES-21 | Add/remove text edits | addTextEdit/removeTextEdit symmetric |
+| ES-22 | removeTextEdit ignores non-existent | No-op |
+| ES-23 | updateTextEdit partial update | Only specified fields change |
+| ES-24 | Undo/redo add text edit | Undo removes, redo re-adds |
+| ES-25 | Undo/redo remove text edit | Undo restores, redo re-removes |
+| ES-26 | Undo/redo modifyTextEdit | Text content restored |
+| ES-27 | Cross-mode undo linear stack | LIFO across textBox and textEdit actions |
+| ES-28 | Multiple undo then redo | Full round-trip restores all state |
+| ES-29 | **pushAction clears redo stack** | New action after undo wipes redo |
+| ES-30 | pushAction marks dirty | isDirty set to true |
+| ES-31 | Undo empty stack is no-op | State unchanged |
+| ES-32 | Redo empty stack is no-op | State unchanged |
+| ES-33 | setTextStyle partial merge | Only specified keys changed |
+| ES-34 | extractedText per page | Pages stored independently |
+| ES-35 | extractedText no overwrite | Multiple pages coexist |
+| ES-36 | Reset clears all state | Resets mode, zoom, dirty, undo, redo, textBoxes, textEdits, extractedText, pageRotations |
 
 ---
 
@@ -144,15 +184,18 @@ Tests the editor Zustand store (`src/stores/editorStore.ts`).
 
 ## Critical Test Assertions (Gotchas)
 
-These tests specifically verify the "Top 10 Gotchas" from the implementation plan:
+These tests specifically verify the "Top 10 Gotchas" from the implementation plan and bug regressions:
 
 1. **Margin nullish coalescing** — Convert-to-PDF worker uses `?? 36` not `|| 72` (tested via `margin: 0` being valid)
 2. **Whitespace preservation** — HP-07: text nodes are NOT trimmed in `extractRuns()`
 3. **Images before paragraphs** — HP-08: `<img>` inside `<p>` produces image block first
-4. **Zoom clamping** — ES-03: 0.5 ≤ zoom ≤ 3.0
-5. **Redo stack cleared on new action** — ES-10: push after undo clears redo
-6. **Coordinate round-trips** — EU-18: screen→PDF→screen ≈ identity at any zoom
+4. **Zoom clamping** — ES-04/05: 0.5 ≤ zoom ≤ 3.0
+5. **Redo stack cleared on new action** — ES-29: push after undo clears redo
+6. **Coordinate round-trips** — EU-27/28/29: screen→PDF→screen ≈ identity at zoom 0.5/1.5/3.0
 7. **All 12 font variants** — EU-01 through EU-04: all 4 families × 4 styles mapped correctly
+8. **Text box click position** — EU-30/31: box top aligns with click point (y = pdfY - height)
+9. **Resize keeps top edge fixed** — EU-32: increasing height + decreasing y = constant top
+10. **Resize undo restores Y** — ES-18: resizeTextBox action tracks fromY/toY for proper undo
 
 ---
 
@@ -179,9 +222,9 @@ npm run test
 
 | Category | Files | Tests |
 |----------|-------|-------|
-| New lib tests | 4 | 51 |
-| New store tests | 1 | 10 |
+| New lib tests | 4 | 65 |
+| New store tests | 1 | 36 |
 | Updated lib tests | 3 | ~10 updated assertions |
 | Updated component tests | 1 | ~4 updated assertions |
-| **Total new/updated** | **9** | **~75 changes** |
-| **Full suite** | **19** | **189** |
+| **Total new/updated** | **9** | **~115 changes** |
+| **Full suite** | **35** | **401** |

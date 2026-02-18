@@ -54,6 +54,7 @@ function TextBoxItem({ textBox, viewport, isSelected, onSelect, onUpdate, onPush
   const [isEditing, setIsEditing] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, tbX: 0, tbY: 0 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editStartText = useRef<string>('');
 
   const screenRect = pdfRectToScreen(
     { x: textBox.x, y: textBox.y, width: textBox.width, height: textBox.height },
@@ -104,22 +105,27 @@ function TextBoxItem({ textBox, viewport, isSelected, onSelect, onUpdate, onPush
 
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    editStartText.current = textBox.text;
     setIsEditing(true);
     onSelect();
     setTimeout(() => textareaRef.current?.focus(), 0);
-  }, [onSelect]);
+  }, [onSelect, textBox.text]);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const oldText = textBox.text;
-    const newText = e.target.value;
-    onUpdate({ text: newText });
-    onPushAction({
-      type: 'editTextBox',
-      id: textBox.id,
-      fromText: oldText,
-      toText: newText,
-    });
-  }, [textBox.id, textBox.text, onUpdate, onPushAction]);
+    onUpdate({ text: e.target.value });
+  }, [onUpdate]);
+
+  const handleBlur = useCallback(() => {
+    setIsEditing(false);
+    if (textBox.text !== editStartText.current) {
+      onPushAction({
+        type: 'editTextBox',
+        id: textBox.id,
+        fromText: editStartText.current,
+        toText: textBox.text,
+      });
+    }
+  }, [textBox.id, textBox.text, onPushAction]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -157,10 +163,10 @@ function TextBoxItem({ textBox, viewport, isSelected, onSelect, onUpdate, onPush
           ref={textareaRef}
           value={textBox.text}
           onChange={handleTextChange}
-          onBlur={() => setIsEditing(false)}
+          onBlur={handleBlur}
           onKeyDown={(e) => {
             e.stopPropagation();
-            if (e.key === 'Escape') setIsEditing(false);
+            if (e.key === 'Escape') handleBlur();
           }}
           className="w-full h-full bg-white/80 dark:bg-gray-900/80 border-none outline-none resize-none p-1"
           style={fontStyle}
@@ -184,11 +190,16 @@ function TextBoxItem({ textBox, viewport, isSelected, onSelect, onUpdate, onPush
             const startY = e.clientY;
             const startW = textBox.width;
             const startH = textBox.height;
+            const startBoxY = textBox.y;
 
             const onMove = (me: MouseEvent) => {
               const dw = (me.clientX - startX) / viewport.scale;
-              const dh = -(me.clientY - startY) / viewport.scale;
+              // Dragging down = positive screen delta = box grows downward
+              // In PDF space: decrease y (bottom edge moves down), increase height
+              // This keeps top edge (y + height) fixed
+              const dh = (me.clientY - startY) / viewport.scale;
               onUpdate({
+                y: startBoxY - dh,
                 width: Math.max(30, startW + dw),
                 height: Math.max(15, startH + dh),
               });
@@ -198,12 +209,14 @@ function TextBoxItem({ textBox, viewport, isSelected, onSelect, onUpdate, onPush
               window.removeEventListener('mousemove', onMove);
               window.removeEventListener('mouseup', onUp);
               const dw = (me.clientX - startX) / viewport.scale;
-              const dh = -(me.clientY - startY) / viewport.scale;
+              const dh = (me.clientY - startY) / viewport.scale;
               onPushAction({
                 type: 'resizeTextBox',
                 id: textBox.id,
+                fromY: startBoxY,
                 fromWidth: startW,
                 fromHeight: startH,
+                toY: startBoxY - dh,
                 toWidth: Math.max(30, startW + dw),
                 toHeight: Math.max(15, startH + dh),
               });

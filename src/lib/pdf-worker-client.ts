@@ -48,6 +48,8 @@ class PDFWorkerClient {
           };
           store.setResult(toolOutput);
           pendingReq.resolve(toolOutput);
+        } else {
+          pendingReq.reject('Empty result from worker');
         }
         this.pending.delete(id);
         break;

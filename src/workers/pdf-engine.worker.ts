@@ -1287,9 +1287,11 @@ operations['edit-pdf'] = async (pdfBytes, options, onProgress) => {
     const font = await pdfDoc.embedFont(fontEnum);
     const { r, g, b: bVal } = parseHexColor(tb.style.color);
 
+    // Draw text at top of box: baseline = bottom (y) + height - fontSize
+    // In PDF space, y is the box bottom, text should appear near the top
     page.drawText(tb.text, {
       x: tb.x,
-      y: tb.y,
+      y: tb.y + tb.height - tb.style.fontSize,
       size: tb.style.fontSize,
       font,
       color: rgb(r, g, bVal),

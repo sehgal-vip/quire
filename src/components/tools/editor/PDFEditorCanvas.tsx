@@ -33,6 +33,7 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
     if (!pdfDoc || !canvasRef.current) return;
 
     let cancelled = false;
+    let cleanupFormListener: (() => void) | null = null;
 
     const renderPage = async () => {
       try {
@@ -83,6 +84,12 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
                   renderForms: true,
                 };
                 AnnotationLayer.render(annotationLayerParams);
+
+                // Listen for form field changes to mark editor as dirty
+                const annotDiv = annotationLayerRef.current!;
+                const onFormInput = () => markDirty();
+                annotDiv.addEventListener('input', onFormInput, { capture: true });
+                cleanupFormListener = () => annotDiv.removeEventListener('input', onFormInput, { capture: true });
               }
             }
           } catch {
@@ -98,23 +105,26 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
 
     return () => {
       cancelled = true;
+      cleanupFormListener?.();
     };
-  }, [pdfDoc, currentPage, zoom]);
+  }, [pdfDoc, currentPage, zoom, markDirty]);
 
-  // Handle click on canvas to add text box
-  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+  // Handle click on overlay to add text box (overlay sits above canvas at z-30)
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     if (mode !== 'add-text' || !viewport || !canvasRef.current) return;
 
+    // Use canvas rect for coordinate calculation (overlay has same position)
     const canvasRect = canvasRef.current.getBoundingClientRect();
     const { x: pdfX, y: pdfY } = screenToPDF(e.clientX, e.clientY, canvasRect, viewport);
 
+    const boxHeight = 30;
     const newTextBox: TextBox = {
       id: crypto.randomUUID(),
       pageIndex: currentPage,
       x: pdfX,
-      y: pdfY,
+      y: pdfY - boxHeight, // y is bottom of rect in PDF space; click point is the top
       width: 200,
-      height: 30,
+      height: boxHeight,
       text: '',
       style: { ...textStyle },
     };
@@ -147,7 +157,6 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
           ref={canvasRef}
           className="block"
           style={{ zIndex: 10 }}
-          onClick={handleCanvasClick}
         />
 
         {/* Layer 2: Annotation/Form layer */}
@@ -160,7 +169,7 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
           }}
         />
 
-        {/* Layer 3: Edit overlay */}
+        {/* Layer 3: Edit overlay — click handler here, NOT on canvas (overlay is on top) */}
         {viewport && (
           <div
             className="absolute inset-0"
@@ -168,6 +177,7 @@ export function PDFEditorCanvas({ pdfDoc, coverColor }: PDFEditorCanvasProps) {
               zIndex: 30,
               pointerEvents: editOverlayPointerEvents,
             }}
+            onClick={handleOverlayClick}
           >
             {mode === 'add-text' && (
               <TextBoxOverlay viewport={viewport} />
